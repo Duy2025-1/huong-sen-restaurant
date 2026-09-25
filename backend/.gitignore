@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/dev.db
+prisma/dev.db-journal
+
+# Build outputs
+dist/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# System and Editor
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db

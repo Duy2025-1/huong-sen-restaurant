@@ -1,0 +1,306 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Branch {
+  id              Int              @id @default(autoincrement())
+  name            String
+  phone           String?
+  address         String
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  areas           Area[]
+  staffUsers      StaffUser[]
+  kitchenStations KitchenStation[]
+  orders          Order[]
+  reservations    Reservation[]
+}
+
+model Role {
+  id          Int         @id @default(autoincrement())
+  code        String      @unique // admin, manager, cashier, waiter, chef
+  name        String
+  permissions String      @default("[]") // JSON string of permissions
+  users       StaffUser[]
+}
+
+model StaffUser {
+  id           Int            @id @default(autoincrement())
+  branchId     Int?
+  branch       Branch?        @relation(fields: [branchId], references: [id])
+  roleId       Int
+  role         Role           @relation(fields: [roleId], references: [id])
+  fullName     String
+  email        String         @unique
+  phone        String         @unique
+  passwordHash String
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  sessions     TableSession[]
+  orders       Order[]
+  payments     Payment[]
+}
+
+model Customer {
+  id           Int           @id @default(autoincrement())
+  fullName     String
+  phone        String        @unique
+  email        String?       @unique
+  passwordHash String?
+  pointBalance Int           @default(0)
+  createdAt    DateTime      @default(now())
+  orders       Order[]
+  reservations Reservation[]
+}
+
+model Area {
+  id           Int      @id @default(autoincrement())
+  branchId     Int
+  branch       Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name         String   // Tầng 1, Tầng 2, Sân Vườn, VIP
+  displayOrder Int      @default(0)
+  tables       Table[]
+}
+
+model Table {
+  id           Int            @id @default(autoincrement())
+  areaId       Int
+  area         Area           @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  tableNumber  String         // B01, VIP-01
+  capacity     Int            @default(4)
+  status       String         @default("available") // available, reserved, occupied, cleaning
+  qrToken      String         @unique // Mã token định danh cố định để tạo QR
+  posX         Int            @default(0)
+  posY         Int            @default(0)
+  isActive     Boolean        @default(true)
+  sessions     TableSession[]
+  orders       Order[]
+  reservations Reservation[]
+}
+
+model TableSession {
+  id           Int       @id @default(autoincrement())
+  tableId      Int
+  table        Table     @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  sessionToken String    @unique
+  guestCount   Int       @default(1)
+  openedById   Int?
+  openedBy     StaffUser? @relation(fields: [openedById], references: [id])
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+  isActive     Boolean   @default(true)
+  orders       Order[]
+}
+
+model KitchenStation {
+  id         Int         @id @default(autoincrement())
+  branchId   Int
+  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name       String      // Bếp Nấu, Bếp Nướng, Quầy Bar
+  isActive   Boolean     @default(true)
+  dishes     Dish[]
+  orderItems OrderItem[]
+}
+
+model Category {
+  id           Int      @id @default(autoincrement())
+  name         String
+  slug         String   @unique
+  imageUrl     String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  dishes       Dish[]
+}
+
+model Dish {
+  id                     Int                  @id @default(autoincrement())
+  categoryId             Int
+  category               Category             @relation(fields: [categoryId], references: [id])
+  stationId              Int?
+  station                KitchenStation?      @relation(fields: [stationId], references: [id])
+  name                   String
+  slug                   String               @unique
+  description            String?
+  shortDescription       String?
+  price                  Float
+  originalPrice          Float?
+  discountedPrice        Float?
+  discount               Int?                 @default(0)
+  currency               String               @default("VND")
+  imageUrl               String?
+  gallery                String               @default("[]") // JSON string of images
+  rating                 Float                @default(4.8)
+  reviewCount            Int                  @default(0)
+  soldCount              Int                  @default(0)
+  isAvailable            Boolean              @default(true) // false = Hết món (86)
+  isBestSeller           Boolean              @default(false)
+  isNew                  Boolean              @default(false)
+  isPopular              Boolean              @default(false)
+  preparationTimeMinutes Int                  @default(10)
+  servingSize            String?              @default("1 phần")
+  calories               Int?                 @default(450)
+  spicyLevel             String               @default("NONE") // NONE, MILD, MEDIUM, HOT, EXTRA_HOT
+  ingredients            String               @default("[]") // JSON string of ingredients
+  allergens              String               @default("[]") // JSON string of allergens
+  nutrition              String               @default("{}") // JSON string of nutrition
+  tags                   String               @default("[]") // JSON string of tags
+  createdAt              DateTime             @default(now())
+  orderItems             OrderItem[]
+  modifierGroups         DishModifierGroup[]
+  reviews                Review[]
+}
+
+model Review {
+  id               Int      @id @default(autoincrement())
+  dishId           Int
+  dish             Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  userName         String
+  avatar           String?
+  rating           Float    @default(5)
+  comment          String
+  createdAt        DateTime @default(now())
+  verifiedPurchase Boolean  @default(true)
+  helpfulCount     Int      @default(0)
+}
+
+model ModifierGroup {
+  id          Int                  @id @default(autoincrement())
+  name        String               // Chọn Size, Topping Thêm, Mức cay
+  isRequired  Boolean              @default(false)
+  minSelect   Int                  @default(0)
+  maxSelect   Int                  @default(1)
+  items       ModifierItem[]
+  dishes      DishModifierGroup[]
+}
+
+model DishModifierGroup {
+  dishId          Int
+  dish            Dish          @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  modifierGroupId Int
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+
+  @@id([dishId, modifierGroupId])
+}
+
+model ModifierItem {
+  id                 Int                 @id @default(autoincrement())
+  groupId            Int
+  group              ModifierGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name               String              // Size L, Thêm Phô Mai, Trân châu
+  additionalPrice    Float               @default(0)
+  isAvailable        Boolean             @default(true)
+  orderItemModifiers OrderItemModifier[]
+}
+
+model Order {
+  id              Int            @id @default(autoincrement())
+  code            String         @unique // ORD-20260924-001
+  branchId        Int
+  branch          Branch         @relation(fields: [branchId], references: [id])
+  sessionId       Int?
+  session         TableSession?  @relation(fields: [sessionId], references: [id])
+  tableId         Int?
+  table           Table?         @relation(fields: [tableId], references: [id])
+  customerId      Int?
+  customer        Customer?      @relation(fields: [customerId], references: [id])
+  createdById     Int?
+  createdBy       StaffUser?     @relation(fields: [createdById], references: [id])
+  
+  orderType       String         @default("dine_in") // dine_in, takeout, delivery
+  status          String         @default("pending") // pending, preparing, ready, completed, cancelled
+  paymentStatus   String         @default("unpaid")  // unpaid, partially_paid, paid, refunded
+
+  subtotalAmount  Float          @default(0)
+  discountAmount  Float          @default(0)
+  taxAmount       Float          @default(0)
+  totalAmount     Float          @default(0)
+
+  deliveryAddress String?
+  customerPhone   String?
+  customerName    String?
+  note            String?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  orderItems      OrderItem[]
+  payments        Payment[]
+}
+
+model OrderItem {
+  id              Int                 @id @default(autoincrement())
+  orderId         Int
+  order           Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  dishId          Int
+  dish            Dish                @relation(fields: [dishId], references: [id])
+  stationId       Int?
+  station         KitchenStation?     @relation(fields: [stationId], references: [id])
+
+  quantity        Int                 @default(1)
+  unitPrice       Float
+  modifiersPrice  Float               @default(0)
+  totalPrice      Float
+
+  status          String              @default("pending") // pending, cooking, ready, served, cancelled
+  kitchenNote     String?
+  roundNumber     Int                 @default(1)
+
+  cookingAt       DateTime?
+  readyAt         DateTime?
+  servedAt        DateTime?
+  cancelledAt     DateTime?
+  cancelledReason String?
+
+  createdAt       DateTime            @default(now())
+  modifiers       OrderItemModifier[]
+}
+
+model OrderItemModifier {
+  id             Int          @id @default(autoincrement())
+  orderItemId    Int
+  orderItem      OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifierItemId Int
+  modifierItem   ModifierItem @relation(fields: [modifierItemId], references: [id])
+  nameAtTime     String
+  priceAtTime    Float
+}
+
+model Payment {
+  id              Int       @id @default(autoincrement())
+  orderId         Int
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  cashierId       Int?
+  cashier         StaffUser? @relation(fields: [cashierId], references: [id])
+
+  method          String    // cash, vnpay, momo, bank_transfer, card
+  amount          Float
+  paymentStatus   String    @default("paid") // paid, refunded
+  transactionCode String?
+  note            String?
+  createdAt       DateTime  @default(now())
+}
+
+model Reservation {
+  id              Int       @id @default(autoincrement())
+  branchId        Int
+  branch          Branch    @relation(fields: [branchId], references: [id])
+  customerId      Int?
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  tableId         Int?
+  table           Table?    @relation(fields: [tableId], references: [id])
+
+  customerName    String
+  customerPhone   String
+  guestCount      Int       @default(2)
+  reservationTime DateTime
+
+  status          String    @default("pending") // pending, confirmed, seated, cancelled, no_show
+  depositAmount   Float     @default(0)
+  note            String?
+  createdAt       DateTime  @default(now())
+}
