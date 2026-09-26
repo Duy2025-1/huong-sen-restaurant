@@ -1,15 +1,33 @@
 import { PrismaClient } from '@prisma/client';
-import { savoryDishes } from './data/dishes_savory';
-import { westernDishes } from './data/dishes_western';
-import { drinksAndDessertsDishes, sampleReviews } from './data/dishes_drinks_desserts';
+// @ts-ignore
+import { dishesPart1 } from './data/dishes_vietnamese_1';
+// @ts-ignore
+import { dishesPart2 } from './data/dishes_vietnamese_2';
+// @ts-ignore
+import { dishesPart3 } from './data/dishes_vietnamese_3';
+// @ts-ignore
+import { dishesPart4, authenticReviews } from './data/dishes_vietnamese_4';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('--- Starting Dish & Menu Seeding ---');
+  console.log('--- Starting Pure Authentic Vietnamese Dish & Menu Seeding ---');
 
-  const allDishes = [...savoryDishes, ...westernDishes, ...drinksAndDessertsDishes];
-  console.log(`Total dishes to seed: ${allDishes.length}`);
+  const allDishes = [...dishesPart1, ...dishesPart2, ...dishesPart3, ...dishesPart4];
+  console.log(`Total 100% Vietnamese dishes to seed: ${allDishes.length}`);
+
+  // Delete any old dishes that exceed the current authentic count to remove foreign/western items
+  try {
+    await prisma.dishModifierGroup.deleteMany({
+      where: { dishId: { gt: allDishes.length } },
+    });
+    await prisma.review.deleteMany({});
+    await prisma.dish.deleteMany({
+      where: { id: { gt: allDishes.length } },
+    });
+  } catch (err) {
+    console.warn('Note on clearing obsolete dishes:', err);
+  }
 
   // 1. Upsert Dishes
   let seededCount = 0;
@@ -39,13 +57,13 @@ async function main() {
         isBestSeller: d.isBestSeller ?? false,
         isNew: d.isNew ?? false,
         isPopular: d.isPopular ?? false,
-        preparationTimeMinutes: d.preparationTimeMinutes || 15,
+        preparationTimeMinutes: d.preparationTimeMinutes || 12,
         servingSize: d.servingSize || '1 phần',
-        calories: d.calories || 450,
+        calories: d.calories || 350,
         spicyLevel: d.spicyLevel || 'NONE',
         ingredients: JSON.stringify(d.ingredients || []),
         allergens: JSON.stringify(d.allergens || []),
-        nutrition: JSON.stringify(d.nutrition || { calories: d.calories || 450, protein: 20, carbs: 40, fat: 15 }),
+        nutrition: JSON.stringify(d.nutrition || { calories: d.calories || 350, protein: 20, carbs: 35, fat: 12 }),
         tags: JSON.stringify(d.tags || []),
       },
       create: {
@@ -70,20 +88,32 @@ async function main() {
         isBestSeller: d.isBestSeller ?? false,
         isNew: d.isNew ?? false,
         isPopular: d.isPopular ?? false,
-        preparationTimeMinutes: d.preparationTimeMinutes || 15,
+        preparationTimeMinutes: d.preparationTimeMinutes || 12,
         servingSize: d.servingSize || '1 phần',
-        calories: d.calories || 450,
+        calories: d.calories || 350,
         spicyLevel: d.spicyLevel || 'NONE',
         ingredients: JSON.stringify(d.ingredients || []),
         allergens: JSON.stringify(d.allergens || []),
-        nutrition: JSON.stringify(d.nutrition || { calories: d.calories || 450, protein: 20, carbs: 40, fat: 15 }),
+        nutrition: JSON.stringify(d.nutrition || { calories: d.calories || 350, protein: 20, carbs: 35, fat: 12 }),
         tags: JSON.stringify(d.tags || []),
       },
     });
 
-    // Link modifier groups if specified
-    if (d.modifierGroupIds && d.modifierGroupIds.length > 0) {
-      for (const mgId of d.modifierGroupIds) {
+    // Link appropriate modifier groups
+    const modGroups: number[] = [];
+    if (d.categoryId === 14) {
+      // Drinks: Ice & Sugar levels
+      modGroups.push(3, 4);
+    } else if (d.categoryId === 12 || d.categoryId === 3 || d.categoryId === 10) {
+      // Hotpot, Soup, Rice: Size & Topping & Spicy
+      modGroups.push(1, 2, 5);
+    } else {
+      // General savory: Spicy & Size
+      modGroups.push(1, 5);
+    }
+
+    for (const mgId of modGroups) {
+      try {
         await prisma.dishModifierGroup.upsert({
           where: {
             dishId_modifierGroupId: {
@@ -97,34 +127,33 @@ async function main() {
             modifierGroupId: mgId,
           },
         });
+      } catch (e) {
+        // ignore if already exists
       }
     }
 
     seededCount++;
     if (seededCount % 25 === 0 || seededCount === allDishes.length) {
-      console.log(`Seeded ${seededCount}/${allDishes.length} dishes...`);
+      console.log(`Seeded ${seededCount}/${allDishes.length} authentic Vietnamese dishes...`);
     }
   }
 
-  // 2. Seed Sample Reviews
-  console.log(`Seeding ${sampleReviews.length} sample reviews...`);
-  // Clean existing sample reviews first or create new ones
-  await prisma.review.deleteMany({});
-  for (const r of sampleReviews) {
+  // 2. Seed Realistic Authentic Reviews (Sample data)
+  console.log(`Seeding ${authenticReviews.length} realistic customer reviews...`);
+  for (const r of authenticReviews) {
     await prisma.review.create({
       data: {
         dishId: r.dishId,
         userName: r.userName,
-        avatar: r.avatar,
         rating: r.rating,
         comment: r.comment,
-        verifiedPurchase: r.verifiedPurchase,
-        helpfulCount: r.helpfulCount,
+        verifiedPurchase: true,
+        helpfulCount: Math.floor(Math.random() * 8) + 2,
       },
     });
   }
 
-  console.log('--- Dish & Menu Seeding Completed Successfully! ---');
+  console.log('--- Pure Vietnamese Menu Seeding Completed Successfully! ---');
 }
 
 main()

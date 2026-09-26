@@ -13,14 +13,13 @@ import {
   Star,
   Filter,
   RotateCcw,
+  Utensils,
+  LayoutGrid,
+  List,
   ChevronRight,
-  Info,
-  AlertCircle,
-  ThumbsUp,
-  MessageSquare,
+  ShieldAlert,
   Send,
-  Eye,
-  Utensils
+  Heart
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
@@ -116,6 +115,7 @@ export const MenuPage: React.FC = () => {
   const [selectedCatId, setSelectedCatId] = useState<number | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'editorial'>('grid');
 
   // Filters & Sorting state
   const [selectedSpicy, setSelectedSpicy] = useState<string>('all');
@@ -197,10 +197,10 @@ export const MenuPage: React.FC = () => {
 
         // Price range filter
         const price = dish.discountedPrice || dish.price;
-        if (selectedPriceRange === 'under50' && price >= 50000) return false;
-        if (selectedPriceRange === '50to100' && (price < 50000 || price > 100000)) return false;
-        if (selectedPriceRange === '100to200' && (price < 100000 || price > 200000)) return false;
-        if (selectedPriceRange === 'above200' && price <= 200000) return false;
+        if (selectedPriceRange === 'under80' && price >= 80000) return false;
+        if (selectedPriceRange === '80to150' && (price < 80000 || price > 150000)) return false;
+        if (selectedPriceRange === '150to250' && (price < 150000 || price > 250000)) return false;
+        if (selectedPriceRange === 'above250' && price <= 250000) return false;
 
         // Quick filter
         if (quickFilter === 'bestseller' && !dish.isBestSeller) return false;
@@ -260,7 +260,7 @@ export const MenuPage: React.FC = () => {
       handleOpenDetail(dish);
     } else {
       addToCart(dish, 1, [], '');
-      showToast(`Đã thêm "${dish.name}" vào giỏ hàng!`);
+      showToast(`Đã thêm "${dish.name}" vào giỏ`);
     }
   };
 
@@ -278,7 +278,7 @@ export const MenuPage: React.FC = () => {
     });
 
     addToCart(detailDish, modalQty, chosenMods, modalNote);
-    showToast(`Đã thêm ${modalQty} phần "${detailDish.name}" vào giỏ hàng!`);
+    showToast(`Đã thêm ${modalQty} phần "${detailDish.name}" vào giỏ hàng`);
     setDetailDish(null);
   };
 
@@ -304,7 +304,7 @@ export const MenuPage: React.FC = () => {
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80',
       });
 
-      setReviewMsg('Cảm ơn bạn! Đánh giá đã được ghi nhận.');
+      setReviewMsg('Cảm ơn bạn! Lời cảm nhận đã được ghi nhận vào sổ nhật ký.');
       setNewReviewComment('');
 
       // Refresh reviews list inside modal
@@ -367,149 +367,190 @@ export const MenuPage: React.FC = () => {
   }, [detailDish, modalModifiers, modalQty]);
 
   return (
-    <div className="min-h-screen bg-dark-950 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-slate-100">
+    <div className="min-h-screen bg-cream-50 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-wood-900 font-sans">
       {/* Toast Alert */}
       {addedToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-dark-900/95 backdrop-blur-xl text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-amber-500/30 animate-in slide-in-from-bottom duration-300">
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+        <div className="fixed bottom-6 right-6 z-50 bg-lotus-900 text-cream-50 px-5 py-3.5 rounded-2xl shadow-lift flex items-center gap-3 border border-lotus-700 animate-in slide-in-from-bottom duration-300">
+          <div className="w-8 h-8 rounded-full bg-lotus-700 text-cream-100 flex items-center justify-center shrink-0">
             <Check className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-100">{addedToast}</p>
-            <p className="text-[10px] text-slate-400">Kiểm tra giỏ hàng để hoàn tất đặt món</p>
+            <p className="text-xs font-bold text-cream-50">{addedToast}</p>
+            <p className="text-[11px] text-cream-300">Kiểm tra giỏ hàng để hoàn tất gọi món</p>
           </div>
           <button
             onClick={() => setIsCartOpen(true)}
-            className="ml-3 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-[11px] font-black hover:opacity-90 shadow-md shadow-orange-500/20"
+            className="ml-3 px-3.5 py-1.5 bg-terracotta hover:bg-terracotta-dark text-white rounded-xl text-[11px] font-bold shadow transition"
           >
-            Mở giỏ hàng
+            Mở giỏ
           </button>
         </div>
       )}
 
-      {/* Header Banner */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 pb-8 border-b border-white/10">
+      {/* Header Banner - Editorial Culinary style */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 pb-8 border-b border-wood-200">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Thực Đơn Đẳng Cấp 5 Sao</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lotus-50 border border-lotus-200 text-lotus-800 text-xs font-semibold uppercase tracking-wider mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-ochre-600" />
+            <span>Thực Đơn Thuần Việt • Ba Miền Đậm Vị</span>
           </div>
-          <h1 className="font-serif text-3xl sm:text-5xl font-black text-white tracking-tight">
-            Ẩm Thực Nhà Hàng Hương Sen
+          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-lotus-900 tracking-tight">
+            Thực Đơn Nhà Hàng Hương Sen
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-2 font-light max-w-2xl">
-            Tuyển tập hơn 150 món ăn thượng hạng từ món khai vị, steak bò Úc, hải sản tươi sống, pizza nướng củi, cho đến các set combo tiết kiệm, đồ uống thanh nhiệt và tráng miệng tinh tế.
+          <p className="text-sm text-wood-600 mt-2 max-w-2xl leading-relaxed">
+            Hơn 100 món ăn truyền thống được chế biến từ nông sản Việt sạch tươi mỗi ngày — từ món gỏi nộm thanh mát, canh chua thơm lừng, cá kho tộ đậm đà đến những nồi lẩu quây quần ấm cúng.
           </p>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full lg:w-96">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-          <input
-            type="text"
-            placeholder="Tìm theo tên món, nguyên liệu, hương vị..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-dark-900 border border-white/10 rounded-2xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-500 shadow-inner focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/60 transition"
-          />
-          {searchQuery && (
+        {/* Search Input & View Toggle */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-wood-400 absolute left-3.5 top-3.5" />
+            <input
+              type="text"
+              placeholder="Tìm món, nguyên liệu, hương vị..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-wood-200 rounded-xl pl-10 pr-10 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 focus:ring-1 focus:ring-lotus-600 shadow-subtle transition"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-2.5 text-wood-400 hover:text-wood-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* View Mode Toggle: Grid vs Editorial Dot-Leader */}
+          <div className="inline-flex items-center p-1 bg-white border border-wood-200 rounded-xl shadow-subtle shrink-0">
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-3 text-slate-400 hover:text-white"
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                viewMode === 'grid'
+                  ? 'bg-lotus-800 text-cream-50 font-bold shadow-sm'
+                  : 'text-wood-600 hover:text-wood-900'
+              }`}
+              title="Dạng lưới hình ảnh"
             >
-              <X className="w-4 h-4" />
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Hình ảnh</span>
             </button>
-          )}
+            <button
+              onClick={() => setViewMode('editorial')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                viewMode === 'editorial'
+                  ? 'bg-lotus-800 text-cream-50 font-bold shadow-sm'
+                  : 'text-wood-600 hover:text-wood-900'
+              }`}
+              title="Dạng thực đơn cổ điển (Dot-leader)"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Thực đơn giấy</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 15 Categories Horizontal Scrollbar */}
+      {/* 15 Vietnamese Categories Horizontal Bar */}
       <div className="mb-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
           <button
             onClick={() => setSelectedCatId('all')}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
               selectedCatId === 'all'
-                ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg shadow-orange-600/30'
-                : 'bg-dark-900 text-slate-400 hover:text-white hover:bg-dark-850 border border-white/5'
+                ? 'bg-lotus-800 text-cream-50 shadow-sm'
+                : 'bg-white text-wood-600 hover:text-wood-900 hover:bg-cream-100 border border-wood-200'
             }`}
           >
-            <span>Tất Cả</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/20 font-black">
+            <span>Tất Cả Món</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                selectedCatId === 'all' ? 'bg-lotus-700 text-cream-100' : 'bg-cream-200 text-wood-700'
+              }`}
+            >
               {allDishes.length}
             </span>
           </button>
 
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCatId(cat.id)}
-              className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${
-                selectedCatId === cat.id
-                  ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg shadow-orange-600/30'
-                  : 'bg-dark-900 text-slate-400 hover:text-white hover:bg-dark-850 border border-white/5'
-              }`}
-            >
-              <span>{cat.name}</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/20 font-black">
-                {cat.dishes.length}
-              </span>
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const isSelected = selectedCatId === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCatId(cat.id)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-lotus-800 text-cream-50 shadow-sm'
+                    : 'bg-white text-wood-600 hover:text-wood-900 hover:bg-cream-100 border border-wood-200'
+                }`}
+              >
+                <span>{cat.name}</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    isSelected ? 'bg-lotus-700 text-cream-100' : 'bg-cream-200 text-wood-700'
+                  }`}
+                >
+                  {cat.dishes.length}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Secondary Filter & Sort Toolbar */}
-      <div className="bg-dark-900/60 border border-white/5 rounded-3xl p-4 mb-8 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-wood-200 rounded-2xl p-4 mb-8 shadow-subtle flex flex-wrap items-center justify-between gap-4">
         {/* Quick Filter Badges */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-400 font-medium flex items-center gap-1 mr-1">
-            <Filter className="w-3.5 h-3.5 text-amber-400" />
-            Lọc nhanh:
+          <span className="text-xs text-wood-500 font-medium flex items-center gap-1 mr-1">
+            <Filter className="w-3.5 h-3.5 text-lotus-700" />
+            Lọc theo:
           </span>
 
           <button
             onClick={() => setQuickFilter(quickFilter === 'bestseller' ? 'all' : 'bestseller')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               quickFilter === 'bestseller'
-                ? 'bg-amber-500 text-white'
-                : 'bg-dark-850 text-slate-300 hover:bg-dark-800 border border-white/5'
+                ? 'bg-ochre-600 text-white font-bold'
+                : 'bg-cream-100 text-wood-700 hover:bg-cream-200 border border-wood-200'
             }`}
           >
-            🔥 Bán chạy
+            🔥 Bán chạy nhất
           </button>
 
           <button
             onClick={() => setQuickFilter(quickFilter === 'popular' ? 'all' : 'popular')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               quickFilter === 'popular'
-                ? 'bg-orange-500 text-white'
-                : 'bg-dark-850 text-slate-300 hover:bg-dark-800 border border-white/5'
+                ? 'bg-lotus-700 text-white font-bold'
+                : 'bg-cream-100 text-wood-700 hover:bg-cream-200 border border-wood-200'
             }`}
           >
-            ⭐ Phổ biến
+            ⭐ Thực khách yêu thích
           </button>
 
           <button
             onClick={() => setQuickFilter(quickFilter === 'new' ? 'all' : 'new')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               quickFilter === 'new'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-dark-850 text-slate-300 hover:bg-dark-800 border border-white/5'
+                ? 'bg-lotus-800 text-white font-bold'
+                : 'bg-cream-100 text-wood-700 hover:bg-cream-200 border border-wood-200'
             }`}
           >
-            ✨ Món mới
+            ✨ Món mới mùa này
           </button>
 
           <button
             onClick={() => setQuickFilter(quickFilter === 'discount' ? 'all' : 'discount')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               quickFilter === 'discount'
-                ? 'bg-rose-600 text-white'
-                : 'bg-dark-850 text-slate-300 hover:bg-dark-800 border border-white/5'
+                ? 'bg-terracotta text-white font-bold'
+                : 'bg-cream-100 text-wood-700 hover:bg-cream-200 border border-wood-200'
             }`}
           >
-            🏷️ Khuyến mãi
+            🏷️ Ưu đãi đặc biệt
           </button>
         </div>
 
@@ -519,11 +560,11 @@ export const MenuPage: React.FC = () => {
           <select
             value={selectedSpicy}
             onChange={(e) => setSelectedSpicy(e.target.value)}
-            className="bg-dark-850 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50"
+            className="bg-cream-50 border border-wood-200 rounded-lg px-3 py-1.5 text-xs text-wood-800 focus:outline-none focus:border-lotus-600"
           >
             <option value="all">Độ cay: Tất cả</option>
             <option value="NONE">Không cay</option>
-            <option value="MILD">Cay nhẹ 🌶️</option>
+            <option value="MILD">Cay dịu nhẹ 🌶️</option>
             <option value="MEDIUM">Cay vừa 🌶️🌶️</option>
             <option value="HOT">Cay nồng 🌶️🌶️🌶️</option>
           </select>
@@ -532,34 +573,34 @@ export const MenuPage: React.FC = () => {
           <select
             value={selectedPriceRange}
             onChange={(e) => setSelectedPriceRange(e.target.value)}
-            className="bg-dark-850 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50"
+            className="bg-cream-50 border border-wood-200 rounded-lg px-3 py-1.5 text-xs text-wood-800 focus:outline-none focus:border-lotus-600"
           >
             <option value="all">Mức giá: Tất cả</option>
-            <option value="under50">Dưới 50.000 đ</option>
-            <option value="50to100">50.000 đ - 100.000 đ</option>
-            <option value="100to200">100.000 đ - 200.000 đ</option>
-            <option value="above200">Trên 200.000 đ</option>
+            <option value="under80">Dưới 80.000 đ</option>
+            <option value="80to150">80.000 đ - 150.000 đ</option>
+            <option value="150to250">150.000 đ - 250.000 đ</option>
+            <option value="above250">Trên 250.000 đ</option>
           </select>
 
           {/* Sort By */}
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-dark-850 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-amber-400 font-bold focus:outline-none focus:border-amber-500/50"
+            className="bg-cream-50 border border-wood-200 rounded-lg px-3 py-1.5 text-xs text-lotus-800 font-bold focus:outline-none focus:border-lotus-600"
           >
             <option value="popular">Sắp xếp: Phổ biến nhất</option>
-            <option value="rating">Đánh giá cao nhất (4.8+)</option>
-            <option value="bestseller">Bán chạy nhất</option>
+            <option value="rating">Đánh giá cao nhất</option>
+            <option value="bestseller">Số lượng bán nhiều nhất</option>
             <option value="price_asc">Giá: Thấp đến Cao</option>
             <option value="price_desc">Giá: Cao đến Thấp</option>
-            <option value="newest">Món mới ra mắt</option>
+            <option value="newest">Món mới nhất</option>
           </select>
 
           {/* Reset Filters */}
           {isAnyFilterActive && (
             <button
               onClick={resetFilters}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold transition"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-terracotta/10 hover:bg-terracotta/20 text-terracotta border border-terracotta/20 text-xs font-semibold transition"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Đặt lại</span>
@@ -570,35 +611,36 @@ export const MenuPage: React.FC = () => {
 
       {/* Results Header */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-xs text-slate-400">
-          Hiển thị <span className="text-amber-400 font-bold">{filteredDishes.length}</span> món ăn
+        <p className="text-xs text-wood-600">
+          Hiển thị <span className="text-lotus-800 font-bold">{filteredDishes.length}</span> món
           {selectedCatId !== 'all' && categories.find((c) => c.id === selectedCatId) && (
-            <span> trong danh mục <strong className="text-slate-200">{categories.find((c) => c.id === selectedCatId)?.name}</strong></span>
+            <span> trong danh mục <strong className="text-wood-900">{categories.find((c) => c.id === selectedCatId)?.name}</strong></span>
           )}
         </p>
       </div>
 
-      {/* Dishes Grid */}
+      {/* Dishes Render */}
       {loading ? (
         <div className="py-24 text-center">
-          <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-slate-400 font-medium">Đang chuẩn bị thực đơn hảo hạng...</p>
+          <div className="w-10 h-10 border-4 border-lotus-700 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-wood-600 font-serif">Bếp đang chuẩn bị thực đơn hảo vị...</p>
         </div>
       ) : filteredDishes.length === 0 ? (
-        <div className="py-24 text-center bg-dark-900/40 rounded-3xl border border-white/5 p-8">
-          <Utensils className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-200">Không tìm thấy món ăn phù hợp</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            Thử thay đổi từ khóa tìm kiếm hoặc bấm nút "Đặt lại" để xem toàn bộ danh mục thực đơn.
+        <div className="py-24 text-center bg-white rounded-2xl border border-wood-200 p-8 shadow-subtle">
+          <Utensils className="w-12 h-12 text-wood-400 mx-auto mb-3" />
+          <h3 className="font-serif text-lg font-bold text-wood-900">Không tìm thấy món ăn phù hợp</h3>
+          <p className="text-xs text-wood-600 mt-1 max-w-sm mx-auto">
+            Thử thay đổi từ khóa tìm kiếm hoặc bấm nút "Đặt lại" để xem toàn bộ danh mục thực đơn thuần Việt.
           </p>
           <button
             onClick={resetFilters}
-            className="mt-4 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition shadow-md"
+            className="mt-4 px-4 py-2 bg-lotus-800 hover:bg-lotus-900 text-cream-50 rounded-xl text-xs font-bold transition shadow-sm"
           >
-            Xem Tất Cả Món Ăn
+            Xem Toàn Bộ Thực Đơn
           </button>
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
+        /* ================= 1. MODERN EDITORIAL GRID VIEW ================= */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredDishes.map((dish) => {
             const hasDiscount = dish.discount && dish.discount > 0;
@@ -610,64 +652,63 @@ export const MenuPage: React.FC = () => {
               <div
                 key={dish.id}
                 onClick={() => handleOpenDetail(dish)}
-                className={`glass-card-hover rounded-3xl overflow-hidden flex flex-col justify-between group shadow-luxury border border-white/5 hover:border-amber-500/30 transition-all duration-300 cursor-pointer ${
-                  !dish.isAvailable ? 'opacity-50 grayscale' : ''
+                className={`bg-white rounded-2xl overflow-hidden flex flex-col justify-between group shadow-subtle hover:shadow-lift border border-wood-200 hover:border-lotus-300 transition-all duration-300 cursor-pointer ${
+                  !dish.isAvailable ? 'opacity-60 grayscale' : ''
                 }`}
               >
                 <div>
                   {/* Dish Image Container */}
-                  <div className="relative h-52 overflow-hidden bg-dark-900">
+                  <div className="relative h-52 overflow-hidden bg-cream-100">
                     <img
                       src={dish.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80'}
                       alt={dish.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                       loading="lazy"
                       onError={(e: any) => {
                         e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80';
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
 
                     {/* Top Badges */}
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                       {hasDiscount && dish.isAvailable && (
-                        <span className="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1">
-                          <Tag className="w-3 h-3" />
+                        <span className="px-2.5 py-0.5 rounded-full bg-terracotta text-white text-[10px] font-bold uppercase tracking-wider shadow">
                           -{dish.discount}%
                         </span>
                       )}
                       {dish.isBestSeller && dish.isAvailable && (
-                        <span className="px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1">
-                          <Flame className="w-3 h-3 text-amber-200" />
-                          Best Seller
+                        <span className="px-2.5 py-0.5 rounded-full bg-ochre-600 text-white text-[10px] font-bold uppercase tracking-wider shadow flex items-center gap-1">
+                          <Flame className="w-3 h-3 text-cream-100" />
+                          Bán chạy
                         </span>
                       )}
                       {dish.isNew && dish.isAvailable && (
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider shadow-lg">
-                          Món Mới
+                        <span className="px-2.5 py-0.5 rounded-full bg-lotus-700 text-white text-[10px] font-bold uppercase tracking-wider shadow">
+                          Món mới
                         </span>
                       )}
                     </div>
 
                     {/* Out of Stock Overlay */}
                     {!dish.isAvailable && (
-                      <div className="absolute inset-0 bg-dark-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-                        <span className="px-3.5 py-1.5 bg-rose-600/90 border border-rose-500 text-white text-xs font-black rounded-xl shadow-lg uppercase tracking-wider">
-                          Tạm Hết Món
+                      <div className="absolute inset-0 bg-wood-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+                        <span className="px-3.5 py-1.5 bg-wood-800 text-cream-100 text-xs font-bold rounded-xl shadow uppercase tracking-wider">
+                          Tạm hết món
                         </span>
                       </div>
                     )}
 
                     {/* Bottom Metadata Badges */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[10px]">
-                      <span className="px-2.5 py-1 rounded-full bg-dark-950/80 backdrop-blur-md text-amber-300 font-bold border border-white/10 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-amber-400" />
+                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-[11px] text-white font-medium">
+                      <span className="px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-sm flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-cream-200" />
                         {dish.preparationTimeMinutes} phút
                       </span>
 
                       {dish.calories && (
-                        <span className="px-2.5 py-1 rounded-full bg-dark-950/80 backdrop-blur-md text-slate-300 font-semibold border border-white/10 flex items-center gap-1">
-                          <Flame className="w-3 h-3 text-orange-400" />
+                        <span className="px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-sm flex items-center gap-1">
+                          <Flame className="w-3 h-3 text-ochre-400" />
                           {dish.calories} kcal
                         </span>
                       )}
@@ -675,19 +716,19 @@ export const MenuPage: React.FC = () => {
                   </div>
 
                   {/* Dish Info */}
-                  <div className="p-5">
+                  <div className="p-4 sm:p-5">
                     {/* Rating & Spicy row */}
                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div className="flex items-center gap-1 text-amber-400">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span className="text-xs font-black">{dish.rating.toFixed(1)}</span>
-                        <span className="text-[10px] text-slate-500 font-normal">
+                      <div className="flex items-center gap-1 text-ochre-600">
+                        <Star className="w-3.5 h-3.5 fill-ochre-500 text-ochre-500" />
+                        <span className="text-xs font-bold">{dish.rating.toFixed(1)}</span>
+                        <span className="text-[10px] text-wood-400">
                           ({dish.reviewCount || 0})
                         </span>
                       </div>
 
                       {dish.spicyLevel && dish.spicyLevel !== 'NONE' && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-terracotta/10 text-terracotta font-medium border border-terracotta/20">
                           {dish.spicyLevel === 'MILD' && '🌶️ Cay nhẹ'}
                           {dish.spicyLevel === 'MEDIUM' && '🌶️🌶️ Cay vừa'}
                           {dish.spicyLevel === 'HOT' && '🌶️🌶️🌶️ Cay nồng'}
@@ -695,20 +736,20 @@ export const MenuPage: React.FC = () => {
                       )}
                     </div>
 
-                    <h3 className="font-serif font-bold text-base text-white group-hover:text-amber-400 transition-colors line-clamp-1">
+                    <h3 className="font-serif font-bold text-base text-wood-900 group-hover:text-lotus-800 transition-colors line-clamp-1">
                       {dish.name}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed font-light">
+                    <p className="text-xs text-wood-600 mt-1 line-clamp-2 leading-relaxed">
                       {dish.shortDescription || dish.description || 'Chế biến công phu từ nguồn nguyên liệu tươi hảo hạng.'}
                     </p>
 
                     {/* Tag Pills */}
                     {tags.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1">
+                      <div className="mt-2.5 flex flex-wrap gap-1">
                         {tags.slice(0, 3).map((t, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-0.5 rounded-lg bg-dark-850 text-slate-400 text-[10px] border border-white/5 font-medium"
+                            className="px-2 py-0.5 rounded-md bg-cream-100 text-wood-600 text-[10px] border border-wood-200"
                           >
                             #{t}
                           </span>
@@ -719,13 +760,13 @@ export const MenuPage: React.FC = () => {
                 </div>
 
                 {/* Footer: Price & Quick Action */}
-                <div className="p-5 pt-0 border-t border-white/5 flex items-center justify-between mt-2">
+                <div className="p-4 sm:p-5 pt-0 border-t border-wood-100 flex items-center justify-between mt-1">
                   <div>
-                    <span className="text-base font-black text-amber-400">
+                    <span className="text-base font-bold text-lotus-800">
                       {currentPrice.toLocaleString('vi-VN')} đ
                     </span>
                     {hasDiscount && (
-                      <span className="block text-[11px] text-slate-500 line-through">
+                      <span className="block text-[11px] text-wood-400 line-through">
                         {originalPrice.toLocaleString('vi-VN')} đ
                       </span>
                     )}
@@ -734,16 +775,83 @@ export const MenuPage: React.FC = () => {
                   {dish.isAvailable ? (
                     <button
                       onClick={(e) => handleQuickAdd(e, dish)}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-md shadow-orange-600/30 hover:scale-105 active:scale-95"
+                      className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-lotus-800 hover:bg-lotus-900 text-cream-50 text-xs font-bold transition shadow-sm active:scale-95"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Thêm</span>
                     </button>
                   ) : (
-                    <span className="text-[10px] font-bold text-rose-400 bg-rose-950/40 px-2.5 py-1 rounded-xl border border-rose-800/40">
+                    <span className="text-[10px] font-semibold text-wood-500 bg-cream-200 px-2.5 py-1 rounded-lg">
                       Tạm Hết
                     </span>
                   )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* ================= 2. CLASSIC EDITORIAL DOT-LEADER VIEW ================= */
+        <div className="space-y-10">
+          {(selectedCatId === 'all'
+            ? categories
+            : categories.filter((c) => c.id === selectedCatId)
+          ).map((cat) => {
+            const catDishes = cat.dishes.filter((d) => filteredDishes.some((fd) => fd.id === d.id));
+            if (catDishes.length === 0) return null;
+
+            return (
+              <div key={cat.id} className="bg-white rounded-3xl p-6 sm:p-10 border border-wood-200 shadow-subtle">
+                <div className="text-center mb-8 pb-4 border-b border-wood-200">
+                  <span className="text-xs uppercase tracking-widest text-ochre-700 font-bold block mb-1">
+                    Hương Vị Đặc Trưng
+                  </span>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-lotus-900">
+                    {cat.name}
+                  </h2>
+                  <div className="w-12 h-0.5 bg-lotus-700 mx-auto mt-2" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                  {catDishes.map((dish) => {
+                    const currentPrice = dish.discountedPrice || dish.price;
+                    return (
+                      <div
+                        key={dish.id}
+                        onClick={() => handleOpenDetail(dish)}
+                        className="group cursor-pointer hover:bg-cream-50/80 p-3 rounded-xl transition"
+                      >
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="font-serif font-bold text-sm sm:text-base text-wood-900 group-hover:text-lotus-800 transition-colors">
+                            {dish.name}
+                            {dish.isBestSeller && (
+                              <span className="ml-2 text-[10px] text-ochre-700 font-sans font-bold uppercase tracking-wider">
+                                [Bán Chạy]
+                              </span>
+                            )}
+                          </span>
+
+                          <span className="flex-1 border-b border-dotted border-wood-300 mx-2" />
+
+                          <span className="font-serif font-bold text-sm sm:text-base text-lotus-800 whitespace-nowrap">
+                            {currentPrice.toLocaleString('vi-VN')} đ
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-xs text-wood-600 line-clamp-1 italic font-serif">
+                            {dish.shortDescription || dish.description || 'Hương vị cổ truyền đặc trưng.'}
+                          </p>
+                          <button
+                            onClick={(e) => handleQuickAdd(e, dish)}
+                            className="text-[11px] font-bold text-lotus-800 hover:text-lotus-900 hover:underline shrink-0 ml-3"
+                          >
+                            + Chọn món
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -753,38 +861,38 @@ export const MenuPage: React.FC = () => {
 
       {/* ================= RICH PRODUCT DETAIL & CUSTOMIZATION MODAL ================= */}
       {detailDish && (
-        <div className="fixed inset-0 bg-dark-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-dark-900 border border-white/10 w-full max-w-2xl rounded-3xl max-h-[92vh] overflow-y-auto p-5 sm:p-8 shadow-2xl text-slate-100 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-wood-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-cream-50 border border-wood-200 w-full max-w-2xl rounded-3xl max-h-[92vh] overflow-y-auto p-5 sm:p-8 shadow-2xl text-wood-900 animate-in zoom-in-95 duration-200 font-sans">
             {/* Modal Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-white/10">
+            <div className="flex items-start justify-between pb-4 border-b border-wood-200">
               <div>
                 <div className="flex items-center gap-2">
                   {detailDish.category && (
-                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                    <span className="text-[10px] text-lotus-800 font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-lotus-100 border border-lotus-200">
                       {detailDish.category.name}
                     </span>
                   )}
                   {detailDish.isBestSeller && (
-                    <span className="text-[10px] text-orange-400 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20">
-                      Best Seller
+                    <span className="text-[10px] text-ochre-700 font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-ochre-100 border border-ochre-300">
+                      Bán chạy
                     </span>
                   )}
                 </div>
-                <h2 className="font-serif text-2xl font-black text-white mt-1.5">{detailDish.name}</h2>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-lotus-900 mt-1.5">{detailDish.name}</h2>
                 <div className="flex items-center gap-3 mt-1 text-xs">
-                  <div className="flex items-center gap-1 text-amber-400 font-bold">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <div className="flex items-center gap-1 text-ochre-600 font-bold">
+                    <Star className="w-4 h-4 fill-ochre-500 text-ochre-500" />
                     <span>{detailDish.rating.toFixed(1)}</span>
-                    <span className="text-slate-400 font-normal">({detailDish.reviewCount} đánh giá)</span>
+                    <span className="text-wood-500 font-normal">({detailDish.reviewCount} lượt đánh giá)</span>
                   </div>
-                  <span className="text-slate-600">•</span>
-                  <span className="text-slate-400">Đã bán {detailDish.soldCount || 100}+ phần</span>
+                  <span className="text-wood-400">•</span>
+                  <span className="text-wood-600">Đã phục vụ {detailDish.soldCount || 100}+ phần</span>
                 </div>
               </div>
 
               <button
                 onClick={() => setDetailDish(null)}
-                className="p-2 rounded-2xl bg-dark-850 text-slate-400 hover:text-white border border-white/5 transition"
+                className="p-2 rounded-xl bg-white text-wood-500 hover:text-wood-900 border border-wood-200 transition shadow-subtle"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -799,15 +907,15 @@ export const MenuPage: React.FC = () => {
 
               return (
                 <div className="py-4">
-                  <div className="relative h-60 sm:h-72 w-full rounded-2xl overflow-hidden bg-dark-950 border border-white/5">
+                  <div className="relative h-60 sm:h-72 w-full rounded-2xl overflow-hidden bg-cream-200 border border-wood-200 shadow-subtle">
                     <img
                       src={activeImage}
                       alt={detailDish.name}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute bottom-3 right-3 px-3 py-1 rounded-full bg-dark-950/80 backdrop-blur-md text-amber-300 text-xs font-bold border border-white/10 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-amber-400" />
-                      Thời gian chế biến: {detailDish.preparationTimeMinutes} phút
+                    <div className="absolute bottom-3 right-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-cream-100 text-xs font-semibold flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-ochre-300" />
+                      Chế biến: {detailDish.preparationTimeMinutes} phút
                     </div>
                   </div>
 
@@ -819,7 +927,7 @@ export const MenuPage: React.FC = () => {
                           key={i}
                           onClick={() => setActiveImageIdx(i)}
                           className={`w-16 h-12 rounded-xl overflow-hidden border-2 transition shrink-0 ${
-                            activeImageIdx === i ? 'border-amber-500 scale-105' : 'border-white/10 opacity-60'
+                            activeImageIdx === i ? 'border-lotus-800 scale-105' : 'border-wood-200 opacity-70'
                           }`}
                         >
                           <img src={img} alt="Thumb" className="w-full h-full object-cover" />
@@ -832,13 +940,13 @@ export const MenuPage: React.FC = () => {
             })()}
 
             {/* Modal Tabs */}
-            <div className="flex border-b border-white/10 mb-5">
+            <div className="flex border-b border-wood-200 mb-5">
               <button
                 onClick={() => setModalTab('customize')}
                 className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition ${
                   modalTab === 'customize'
-                    ? 'border-amber-500 text-amber-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-lotus-800 text-lotus-800'
+                    : 'border-transparent text-wood-500 hover:text-wood-800'
                 }`}
               >
                 Tùy Biến & Dinh Dưỡng
@@ -847,11 +955,11 @@ export const MenuPage: React.FC = () => {
                 onClick={() => setModalTab('reviews')}
                 className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition ${
                   modalTab === 'reviews'
-                    ? 'border-amber-500 text-amber-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-lotus-800 text-lotus-800'
+                    : 'border-transparent text-wood-500 hover:text-wood-800'
                 }`}
               >
-                Đánh Giá Thực Khách ({detailDish.reviews?.length || detailDish.reviewCount || 0})
+                Nhật Ký Thực Khách ({detailDish.reviews?.length || detailDish.reviewCount || 0})
               </button>
             </div>
 
@@ -860,8 +968,8 @@ export const MenuPage: React.FC = () => {
               <div className="space-y-6">
                 {/* Culinary Description */}
                 <div>
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Mô tả món ăn</h4>
-                  <p className="text-xs text-slate-300 leading-relaxed font-light">
+                  <h4 className="text-xs font-bold text-wood-700 uppercase tracking-wider mb-1">Mô tả món ăn</h4>
+                  <p className="text-xs sm:text-sm text-wood-700 leading-relaxed font-serif">
                     {detailDish.description || detailDish.shortDescription || 'Món ăn hảo hạng được đầu bếp chọn lựa nguyên liệu kỹ càng và chế biến theo công thức độc quyền.'}
                   </p>
                 </div>
@@ -872,9 +980,9 @@ export const MenuPage: React.FC = () => {
                   const allergens = safeParseJson<string[]>(detailDish.allergens, []);
 
                   return (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-dark-850/50 p-4 rounded-2xl border border-white/5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-4 rounded-2xl border border-wood-200 shadow-subtle">
                       <div>
-                        <span className="text-[11px] font-bold text-amber-400 block mb-1.5">
+                        <span className="text-[11px] font-bold text-lotus-800 block mb-1.5">
                           🥗 Nguyên liệu chính:
                         </span>
                         <div className="flex flex-wrap gap-1">
@@ -882,19 +990,19 @@ export const MenuPage: React.FC = () => {
                             ingredients.map((ing, i) => (
                               <span
                                 key={i}
-                                className="px-2 py-0.5 rounded-lg bg-dark-800 text-slate-300 text-[10px] border border-white/5"
+                                className="px-2 py-0.5 rounded-md bg-cream-100 text-wood-800 text-[10px] border border-wood-200 font-medium"
                               >
                                 {ing}
                               </span>
                             ))
                           ) : (
-                            <span className="text-[11px] text-slate-500">Nguyên liệu tươi chọn lọc</span>
+                            <span className="text-[11px] text-wood-500">Nguyên liệu tươi chọn lọc</span>
                           )}
                         </div>
                       </div>
 
                       <div>
-                        <span className="text-[11px] font-bold text-rose-400 block mb-1.5">
+                        <span className="text-[11px] font-bold text-terracotta block mb-1.5">
                           ⚠️ Lưu ý dị ứng:
                         </span>
                         <div className="flex flex-wrap gap-1">
@@ -902,13 +1010,13 @@ export const MenuPage: React.FC = () => {
                             allergens.map((alg, i) => (
                               <span
                                 key={i}
-                                className="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/20 text-[10px] font-medium"
+                                className="px-2 py-0.5 rounded-md bg-terracotta/10 text-terracotta border border-terracotta/20 text-[10px] font-medium"
                               >
                                 {alg}
                               </span>
                             ))
                           ) : (
-                            <span className="text-[11px] text-emerald-400">Không có chất gây dị ứng phổ biến</span>
+                            <span className="text-[11px] text-lotus-700">Không có chất gây dị ứng phổ biến</span>
                           )}
                         </div>
                       </div>
@@ -926,31 +1034,31 @@ export const MenuPage: React.FC = () => {
                   });
 
                   return (
-                    <div className="bg-dark-850 p-4 rounded-2xl border border-white/5">
+                    <div className="bg-white p-4 rounded-2xl border border-wood-200 shadow-subtle">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-slate-200">Giá trị dinh dưỡng chuẩn</span>
-                        <span className="text-[10px] text-slate-400">Khẩu phần: {detailDish.servingSize || '1 phần'}</span>
+                        <span className="text-xs font-bold text-wood-900">Giá trị dinh dưỡng chuẩn</span>
+                        <span className="text-[10px] text-wood-500">Khẩu phần: {detailDish.servingSize || '1 phần'}</span>
                       </div>
                       <div className="grid grid-cols-4 gap-2 text-center">
-                        <div className="p-2 rounded-xl bg-dark-900 border border-white/5">
-                          <span className="text-[10px] text-slate-400 block">Năng lượng</span>
-                          <span className="text-sm font-black text-amber-400">{nutrition.calories || detailDish.calories || 450} kcal</span>
+                        <div className="p-2 rounded-xl bg-cream-50 border border-wood-100">
+                          <span className="text-[10px] text-wood-500 block">Năng lượng</span>
+                          <span className="text-sm font-bold text-ochre-700">{nutrition.calories || detailDish.calories || 450} kcal</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-dark-900 border border-white/5">
-                          <span className="text-[10px] text-slate-400 block">Chất đạm</span>
-                          <span className="text-sm font-black text-emerald-400">{nutrition.protein || 20} g</span>
+                        <div className="p-2 rounded-xl bg-cream-50 border border-wood-100">
+                          <span className="text-[10px] text-wood-500 block">Chất đạm</span>
+                          <span className="text-sm font-bold text-lotus-800">{nutrition.protein || 20} g</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-dark-900 border border-white/5">
-                          <span className="text-[10px] text-slate-400 block">Tinh bột</span>
-                          <span className="text-sm font-black text-blue-400">{nutrition.carbs || 40} g</span>
+                        <div className="p-2 rounded-xl bg-cream-50 border border-wood-100">
+                          <span className="text-[10px] text-wood-500 block">Tinh bột</span>
+                          <span className="text-sm font-bold text-wood-800">{nutrition.carbs || 40} g</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-dark-900 border border-white/5">
-                          <span className="text-[10px] text-slate-400 block">Chất béo</span>
-                          <span className="text-sm font-black text-purple-400">{nutrition.fat || 15} g</span>
+                        <div className="p-2 rounded-xl bg-cream-50 border border-wood-100">
+                          <span className="text-[10px] text-wood-500 block">Chất béo</span>
+                          <span className="text-sm font-bold text-terracotta">{nutrition.fat || 15} g</span>
                         </div>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-2 italic">
-                        * Giá trị dinh dưỡng mang tính chất ước tính dựa trên công thức chế biến chuẩn.
+                      <p className="text-[10px] text-wood-400 mt-2 italic">
+                        * Giá trị dinh dưỡng mang tính chất tham khảo chuẩn công thức bếp Hương Sen.
                       </p>
                     </div>
                   );
@@ -959,8 +1067,8 @@ export const MenuPage: React.FC = () => {
                 {/* Modifiers List */}
                 {detailDish.modifierGroups && detailDish.modifierGroups.length > 0 && (
                   <div className="space-y-4 pt-2">
-                    <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                      Tùy chọn thêm cho món ăn
+                    <h4 className="text-xs font-bold text-lotus-900 uppercase tracking-wider">
+                      Tùy chọn khẩu vị & món ăn kèm
                     </h4>
 
                     {detailDish.modifierGroups.map((mg) => {
@@ -968,10 +1076,10 @@ export const MenuPage: React.FC = () => {
                       const isSingle = group.maxSelect === 1;
 
                       return (
-                        <div key={group.id} className="border-b border-white/5 pb-4">
+                        <div key={group.id} className="border-b border-wood-200 pb-4">
                           <div className="flex items-center justify-between mb-2.5">
-                            <label className="text-xs font-bold text-slate-200">{group.name}</label>
-                            <span className="text-[10px] text-slate-400 bg-white/5 px-2 py-0.5 rounded-full">
+                            <label className="text-xs font-bold text-wood-900">{group.name}</label>
+                            <span className="text-[10px] text-wood-500 bg-cream-200 px-2 py-0.5 rounded-full font-medium">
                               {group.isRequired ? 'Bắt buộc chọn' : 'Tùy chọn'}
                             </span>
                           </div>
@@ -982,10 +1090,10 @@ export const MenuPage: React.FC = () => {
                               return (
                                 <label
                                   key={item.id}
-                                  className={`flex items-center justify-between p-3 rounded-2xl border text-xs cursor-pointer transition-all ${
+                                  className={`flex items-center justify-between p-3 rounded-xl border text-xs cursor-pointer transition-all ${
                                     isChecked
-                                      ? 'bg-amber-500/10 border-amber-500/50 text-amber-300 font-bold shadow-glow-amber'
-                                      : 'bg-dark-850 border-white/5 text-slate-300 hover:border-white/15'
+                                      ? 'bg-lotus-50 border-lotus-600 text-lotus-900 font-bold shadow-subtle'
+                                      : 'bg-white border-wood-200 text-wood-700 hover:border-wood-300'
                                   }`}
                                 >
                                   <div className="flex items-center gap-2.5">
@@ -1007,12 +1115,12 @@ export const MenuPage: React.FC = () => {
                                           }
                                         }
                                       }}
-                                      className="text-amber-500 focus:ring-amber-500 accent-amber-500"
+                                      className="text-lotus-700 focus:ring-lotus-600 accent-lotus-700"
                                     />
                                     <span>{item.name}</span>
                                   </div>
                                   {item.additionalPrice > 0 && (
-                                    <span className="text-amber-400 font-bold">
+                                    <span className="text-lotus-800 font-bold">
                                       +{item.additionalPrice.toLocaleString('vi-VN')} đ
                                     </span>
                                   )}
@@ -1028,34 +1136,34 @@ export const MenuPage: React.FC = () => {
 
                 {/* Kitchen Note */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">
-                    Ghi chú cho bếp trưởng
+                  <label className="block text-xs font-bold text-wood-900 mb-1.5">
+                    Ghi chú riêng cho đầu bếp
                   </label>
                   <input
                     type="text"
                     value={modalNote}
                     onChange={(e) => setModalNote(e.target.value)}
-                    placeholder="Ví dụ: Ít cay, không hành tây, ăn kèm sốt riêng..."
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/60 transition"
+                    placeholder="Ví dụ: Ít cay, không hành ngò, xin thêm nước chấm..."
+                    className="w-full bg-white border border-wood-200 rounded-xl p-3 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle transition"
                   />
                 </div>
 
                 {/* Quantity Stepper & Price Calculation */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                  <span className="text-xs font-bold text-slate-200">Số lượng:</span>
-                  <div className="flex items-center gap-3 bg-dark-850 p-1.5 rounded-2xl border border-white/10">
+                <div className="flex items-center justify-between pt-2 border-t border-wood-200">
+                  <span className="text-xs font-bold text-wood-900">Số lượng phần ăn:</span>
+                  <div className="flex items-center gap-3 bg-white p-1.5 rounded-xl border border-wood-200 shadow-subtle">
                     <button
                       onClick={() => setModalQty(Math.max(1, modalQty - 1))}
-                      className="w-8 h-8 rounded-xl bg-dark-900 text-slate-300 hover:text-white flex items-center justify-center font-bold transition"
+                      className="w-8 h-8 rounded-lg bg-cream-100 text-wood-700 hover:text-wood-900 flex items-center justify-center font-bold transition"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="font-extrabold text-sm w-6 text-center text-amber-400">
+                    <span className="font-bold text-sm w-6 text-center text-lotus-900">
                       {modalQty}
                     </span>
                     <button
                       onClick={() => setModalQty(modalQty + 1)}
-                      className="w-8 h-8 rounded-xl bg-dark-900 text-slate-300 hover:text-white flex items-center justify-center font-bold transition"
+                      className="w-8 h-8 rounded-lg bg-cream-100 text-wood-700 hover:text-wood-900 flex items-center justify-center font-bold transition"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -1065,34 +1173,34 @@ export const MenuPage: React.FC = () => {
                 {/* Add to Cart CTA */}
                 <button
                   onClick={handleModalAddToCart}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-sm shadow-xl shadow-orange-600/30 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl bg-lotus-800 hover:bg-lotus-900 text-cream-50 font-bold text-sm shadow-subtle transition-all flex items-center justify-center gap-2 active:scale-98"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>Thêm Vào Giỏ Hàng — {modalTotalPrice.toLocaleString('vi-VN')} đ</span>
+                  <span>Thêm Vào Giỏ — {modalTotalPrice.toLocaleString('vi-VN')} đ</span>
                 </button>
 
                 {/* Related Dishes */}
                 {detailDish.relatedDishes && detailDish.relatedDishes.length > 0 && (
-                  <div className="pt-6 border-t border-white/10">
-                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
-                      Gợi ý món dùng kèm hoàn hảo
+                  <div className="pt-6 border-t border-wood-200">
+                    <h4 className="text-xs font-bold text-wood-700 uppercase tracking-wider mb-3">
+                      Gợi ý món dùng kèm hòa hợp
                     </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {detailDish.relatedDishes.map((rd) => (
                         <div
                           key={rd.id}
                           onClick={() => handleOpenDetail(rd)}
-                          className="bg-dark-850 p-2.5 rounded-2xl border border-white/5 hover:border-amber-500/30 cursor-pointer transition text-left group"
+                          className="bg-white p-2.5 rounded-xl border border-wood-200 hover:border-lotus-400 cursor-pointer transition text-left group shadow-subtle"
                         >
                           <img
                             src={rd.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&q=80'}
                             alt={rd.name}
-                            className="w-full h-20 object-cover rounded-xl mb-2 group-hover:scale-105 transition"
+                            className="w-full h-20 object-cover rounded-lg mb-2 group-hover:scale-105 transition"
                           />
-                          <p className="text-[11px] font-bold text-white group-hover:text-amber-400 line-clamp-1">
+                          <p className="text-[11px] font-bold text-wood-900 group-hover:text-lotus-800 line-clamp-1">
                             {rd.name}
                           </p>
-                          <p className="text-[11px] font-black text-amber-400 mt-0.5">
+                          <p className="text-[11px] font-bold text-lotus-800 mt-0.5">
                             {(rd.discountedPrice || rd.price).toLocaleString('vi-VN')} đ
                           </p>
                         </div>
@@ -1107,40 +1215,40 @@ export const MenuPage: React.FC = () => {
             {modalTab === 'reviews' && (
               <div className="space-y-6">
                 {/* Score summary */}
-                <div className="flex items-center gap-6 p-4 rounded-2xl bg-dark-850 border border-white/5">
+                <div className="flex items-center gap-6 p-4 rounded-2xl bg-white border border-wood-200 shadow-subtle">
                   <div className="text-center">
-                    <span className="text-3xl font-black text-amber-400">{detailDish.rating.toFixed(1)}</span>
-                    <div className="flex items-center justify-center gap-0.5 mt-1 text-amber-400">
+                    <span className="text-3xl font-bold text-ochre-600 font-serif">{detailDish.rating.toFixed(1)}</span>
+                    <div className="flex items-center justify-center gap-0.5 mt-1 text-ochre-500">
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <Star key={s} className="w-3.5 h-3.5 fill-ochre-500 text-ochre-500" />
                       ))}
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">
-                      {detailDish.reviewCount || 0} lượt đánh giá
+                    <span className="text-[10px] text-wood-500 mt-1 block">
+                      {detailDish.reviewCount || 0} lượt chia sẻ
                     </span>
                   </div>
-                  <div className="border-l border-white/10 pl-6 text-xs text-slate-300 font-light">
-                    <p className="font-semibold text-white">100% Đánh giá từ thực khách đã trải nghiệm</p>
-                    <p className="text-slate-400 text-[11px] mt-0.5">
-                      Tất cả các món ăn được chuẩn bị tươi mới mỗi ngày. Mọi đóng góp của bạn là động lực để nhà hàng hoàn thiện hơn.
+                  <div className="border-l border-wood-200 pl-6 text-xs text-wood-600">
+                    <p className="font-bold text-wood-900">100% Cảm nhận từ thực khách đã thưởng thức</p>
+                    <p className="text-wood-600 text-[11px] mt-0.5 leading-relaxed font-serif">
+                      Tất cả món ăn được chế biến tươi mới mỗi ngày. Mọi góp ý là nguồn động lực quý giá để bếp Hương Sen hoàn thiện phong vị quê nhà.
                     </p>
                   </div>
                 </div>
 
                 {/* Write Review Form */}
-                <form onSubmit={handleSubmitReview} className="bg-dark-850 p-4 rounded-2xl border border-white/5 space-y-3">
-                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
-                    ✍️ Viết đánh giá của bạn
+                <form onSubmit={handleSubmitReview} className="bg-white p-4 rounded-2xl border border-wood-200 shadow-subtle space-y-3">
+                  <span className="text-xs font-bold text-lotus-900 uppercase tracking-wider block">
+                    ✍️ Gửi lời cảm nhận của bạn
                   </span>
 
                   {reviewMsg && (
-                    <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                    <div className="p-2.5 rounded-xl bg-lotus-50 text-lotus-800 text-xs font-semibold border border-lotus-200">
                       {reviewMsg}
                     </div>
                   )}
 
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-300">Chọn số sao:</span>
+                    <span className="text-xs text-wood-700">Mức độ hài lòng:</span>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -1152,8 +1260,8 @@ export const MenuPage: React.FC = () => {
                           <Star
                             className={`w-5 h-5 ${
                               star <= newReviewRating
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'text-slate-600'
+                                ? 'fill-ochre-500 text-ochre-500'
+                                : 'text-wood-300'
                             }`}
                           />
                         </button>
@@ -1165,25 +1273,25 @@ export const MenuPage: React.FC = () => {
                     type="text"
                     value={newReviewerName}
                     onChange={(e) => setNewReviewerName(e.target.value)}
-                    placeholder="Tên của bạn..."
-                    className="w-full bg-dark-900 border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/60"
+                    placeholder="Họ tên của bạn..."
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl p-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600"
                   />
 
                   <textarea
                     rows={2}
                     value={newReviewComment}
                     onChange={(e) => setNewReviewComment(e.target.value)}
-                    placeholder="Chia sẻ cảm nhận về hương vị, độ tươi và cách trình bày..."
-                    className="w-full bg-dark-900 border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/60"
+                    placeholder="Chia sẻ cảm nhận về độ tươi ngon, hương vị và cách bài trí món ăn..."
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl p-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600"
                   />
 
                   <button
                     type="submit"
                     disabled={submittingReview}
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    className="px-4 py-2 bg-lotus-800 hover:bg-lotus-900 disabled:opacity-50 text-cream-50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-subtle"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{submittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}</span>
+                    <span>{submittingReview ? 'Đang gửi...' : 'Gửi cảm nhận'}</span>
                   </button>
                 </form>
 
@@ -1193,7 +1301,7 @@ export const MenuPage: React.FC = () => {
                     detailDish.reviews.map((rev) => (
                       <div
                         key={rev.id}
-                        className="p-4 rounded-2xl bg-dark-850/60 border border-white/5 space-y-1.5"
+                        className="p-4 rounded-2xl bg-white border border-wood-200 shadow-subtle space-y-1.5"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
@@ -1203,36 +1311,36 @@ export const MenuPage: React.FC = () => {
                                 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&q=80'
                               }
                               alt={rev.userName}
-                              className="w-7 h-7 rounded-full object-cover border border-white/10"
+                              className="w-7 h-7 rounded-full object-cover border border-wood-200"
                             />
                             <div>
-                              <span className="text-xs font-bold text-white block">{rev.userName}</span>
-                              <span className="text-[10px] text-emerald-400">Đã trải nghiệm tại quán</span>
+                              <span className="text-xs font-bold text-wood-900 block">{rev.userName}</span>
+                              <span className="text-[10px] text-lotus-700">Đã trải nghiệm tại quán</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1 text-amber-400">
+                          <div className="flex items-center gap-1 text-ochre-500">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
                                 className={`w-3 h-3 ${
                                   i < rev.rating
-                                    ? 'fill-amber-400 text-amber-400'
-                                    : 'text-slate-600'
+                                    ? 'fill-ochre-500 text-ochre-500'
+                                    : 'text-wood-200'
                                 }`}
                               />
                             ))}
                           </div>
                         </div>
 
-                        <p className="text-xs text-slate-300 font-light leading-relaxed pl-9">
-                          {rev.comment}
+                        <p className="text-xs text-wood-700 font-serif leading-relaxed pl-9">
+                          "{rev.comment}"
                         </p>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-slate-500 text-xs">
-                      Chưa có đánh giá nào cho món này. Hãy là người đầu tiên trải nghiệm và chia sẻ!
+                    <div className="text-center py-8 text-wood-500 text-xs italic font-serif">
+                      Chưa có lời cảm nhận nào cho món này. Hãy là người đầu tiên trải nghiệm và chia sẻ!
                     </div>
                   )}
                 </div>

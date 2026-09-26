@@ -124,22 +124,22 @@ async function main() {
     }
   }
 
-  // 6. Define 15 Comprehensive Categories
+  // 6. Define 15 Comprehensive Authentic Vietnamese Categories
   const categoryDefs = [
-    { id: 1, name: 'Khai Vị', slug: 'khai-vi', imageUrl: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=600&q=80', displayOrder: 1 },
-    { id: 2, name: 'Salad', slug: 'salad', imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80', displayOrder: 2 },
-    { id: 3, name: 'Súp', slug: 'sup', imageUrl: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80', displayOrder: 3 },
-    { id: 4, name: 'Gà', slug: 'ga', imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=80', displayOrder: 4 },
-    { id: 5, name: 'Bò', slug: 'bo', imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80', displayOrder: 5 },
-    { id: 6, name: 'Heo', slug: 'heo', imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80', displayOrder: 6 },
-    { id: 7, name: 'Hải Sản', slug: 'hai-san', imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&q=80', displayOrder: 7 },
-    { id: 8, name: 'Cơm', slug: 'com', imageUrl: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80', displayOrder: 8 },
-    { id: 9, name: 'Mì / Pasta', slug: 'mi-pasta', imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281134?w=600&q=80', displayOrder: 9 },
-    { id: 10, name: 'Pizza', slug: 'pizza', imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80', displayOrder: 10 },
-    { id: 11, name: 'Burger', slug: 'burger', imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80', displayOrder: 11 },
-    { id: 12, name: 'Món Ăn Nhẹ', slug: 'mon-an-nhe', imageUrl: 'https://images.unsplash.com/photo-1585325701165-351af916e581?w=600&q=80', displayOrder: 12 },
-    { id: 13, name: 'Combo', slug: 'combo', imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80', displayOrder: 13 },
-    { id: 14, name: 'Đồ Uống', slug: 'do-uong', imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80', displayOrder: 14 },
+    { id: 1, name: 'Khai Vị', slug: 'khai-vi', imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80', displayOrder: 1 },
+    { id: 2, name: 'Gỏi & Nộm', slug: 'goi-nom', imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80', displayOrder: 2 },
+    { id: 3, name: 'Canh & Món Nước', slug: 'canh-mon-nuoc', imageUrl: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=600&q=80', displayOrder: 3 },
+    { id: 4, name: 'Món Gà', slug: 'mon-ga', imageUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=600&q=80', displayOrder: 4 },
+    { id: 5, name: 'Món Bò', slug: 'mon-bo', imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80', displayOrder: 5 },
+    { id: 6, name: 'Món Heo', slug: 'mon-heo', imageUrl: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=600&q=80', displayOrder: 6 },
+    { id: 7, name: 'Hải Sản', slug: 'hai-san', imageUrl: 'https://images.unsplash.com/photo-1559742811-822873691df8?w=600&q=80', displayOrder: 7 },
+    { id: 8, name: 'Món Xào', slug: 'mon-xao', imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80', displayOrder: 8 },
+    { id: 9, name: 'Món Kho', slug: 'mon-kho', imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&q=80', displayOrder: 9 },
+    { id: 10, name: 'Cơm', slug: 'com', imageUrl: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80', displayOrder: 10 },
+    { id: 11, name: 'Món Quê', slug: 'mon-que', imageUrl: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80', displayOrder: 11 },
+    { id: 12, name: 'Lẩu', slug: 'lau', imageUrl: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80', displayOrder: 12 },
+    { id: 13, name: 'Món Chay', slug: 'mon-chay', imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80', displayOrder: 13 },
+    { id: 14, name: 'Đồ Uống', slug: 'do-uong', imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&q=80', displayOrder: 14 },
     { id: 15, name: 'Tráng Miệng', slug: 'trang-mieng', imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80', displayOrder: 15 },
   ];
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Phone, User, ShieldCheck, Receipt, ChefHat, UserCheck, Crown, Sparkles } from 'lucide-react';
+import { Lock, Mail, Phone, User, ShieldCheck, Receipt, ChefHat, UserCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 
@@ -61,7 +61,7 @@ export const LoginPage: React.FC = () => {
       });
 
       localStorage.setItem('rms_token', res.data.token);
-      alert('🎉 Đăng ký tài khoản thành công!');
+      alert('🎉 Đăng ký tài khoản Hương Sen thành công!');
       window.location.href = '/';
     } catch (err: any) {
       setErrorMsg(err.response?.data?.message || 'Đăng ký thất bại.');
@@ -92,35 +92,45 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 bg-dark-950 text-slate-100">
-      <div className="glass-card max-w-md w-full rounded-3xl p-6 sm:p-10 shadow-luxury border border-white/10 relative overflow-hidden">
-        {/* Glow behind card */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 bg-cream-50 text-wood-900 font-sans">
+      <div className="bg-white max-w-md w-full rounded-3xl p-6 sm:p-10 shadow-lift border border-wood-200 relative overflow-hidden">
+        {/* Subtle lotus ornament */}
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-lotus-800 text-cream-50 flex items-center justify-center mx-auto mb-3 shadow-subtle">
+            <span className="font-serif font-bold text-2xl">S</span>
+          </div>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-ochre-700 block">
+            Hương Sen • Ẩm Thực Thuần Việt
+          </span>
+          <p className="text-xs text-wood-500 font-serif italic mt-0.5">
+            Trọn vị Việt, gìn giữ hương quê
+          </p>
+        </div>
 
         {/* Tab switchers */}
-        <div className="flex bg-dark-950 p-1.5 rounded-2xl mb-8 border border-white/10">
+        <div className="flex bg-cream-100 p-1 rounded-xl mb-6 border border-wood-200">
           <button
             onClick={() => {
               setMode('customer-login');
               setErrorMsg(null);
             }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
               mode === 'customer-login' 
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md' 
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-lotus-800 text-cream-50 shadow-sm' 
+                : 'text-wood-600 hover:text-wood-900'
             }`}
           >
-            Đăng Nhập Khách
+            Đăng Nhập
           </button>
           <button
             onClick={() => {
               setMode('customer-register');
               setErrorMsg(null);
             }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
               mode === 'customer-register' 
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md' 
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-lotus-800 text-cream-50 shadow-sm' 
+                : 'text-wood-600 hover:text-wood-900'
             }`}
           >
             Đăng Ký
@@ -130,10 +140,10 @@ export const LoginPage: React.FC = () => {
               setMode('staff');
               setErrorMsg(null);
             }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
               mode === 'staff' 
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md' 
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-lotus-800 text-cream-50 shadow-sm' 
+                : 'text-wood-600 hover:text-wood-900'
             }`}
           >
             Nhân Viên
@@ -142,7 +152,7 @@ export const LoginPage: React.FC = () => {
 
         {/* Error notification */}
         {errorMsg && (
-          <div className="mb-6 p-3.5 rounded-2xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs font-semibold">
+          <div className="mb-5 p-3 rounded-xl bg-terracotta/10 border border-terracotta/30 text-terracotta text-xs font-medium">
             {errorMsg}
           </div>
         )}
@@ -150,41 +160,38 @@ export const LoginPage: React.FC = () => {
         {/* 1. CUSTOMER LOGIN */}
         {mode === 'customer-login' && (
           <div>
-            <div className="text-center mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-3 text-amber-400">
-                <Crown className="w-6 h-6" />
-              </div>
-              <h2 className="font-serif text-2xl font-black text-white">Đăng Nhập Thành Viên</h2>
-              <p className="text-xs text-slate-400 mt-1 font-light">Tích điểm thưởng và theo dõi đơn hàng dễ dàng</p>
+            <div className="text-center mb-6">
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-lotus-900">Đăng Nhập Thành Viên</h2>
+              <p className="text-xs text-wood-600 mt-1 font-serif">Tích lũy điểm thưởng và theo dõi bữa ăn thân thuộc</p>
             </div>
 
             <form onSubmit={handleCustomerLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">Số điện thoại hoặc Email</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Số điện thoại hoặc Email</label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
+                  <Phone className="w-4 h-4 text-wood-400 absolute left-4 top-3.5" />
                   <input
                     type="text"
                     required
                     value={custLoginKey}
                     onChange={(e) => setCustLoginKey(e.target.value)}
                     placeholder="0901234567 hoặc email@gmail.com"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">Mật khẩu</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Mật khẩu</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
+                  <Lock className="w-4 h-4 text-wood-400 absolute left-4 top-3.5" />
                   <input
                     type="password"
                     required
                     value={custPassword}
                     onChange={(e) => setCustPassword(e.target.value)}
                     placeholder="••••••"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
@@ -192,17 +199,17 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-xs rounded-2xl shadow-xl shadow-orange-500/25 transition disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full py-3.5 bg-lotus-800 hover:bg-lotus-900 text-cream-50 font-bold text-xs rounded-xl shadow-subtle transition disabled:opacity-50 active:scale-98"
               >
                 {loading ? 'Đang xác thực...' : 'Đăng Nhập Khách Hàng'}
               </button>
             </form>
 
-            <p className="text-center text-xs text-slate-400 mt-6 font-light">
+            <p className="text-center text-xs text-wood-600 mt-5">
               Chưa có tài khoản?{' '}
               <button
                 onClick={() => setMode('customer-register')}
-                className="text-amber-400 font-bold hover:underline"
+                className="text-lotus-800 font-bold hover:underline"
               >
                 Đăng ký ngay
               </button>
@@ -214,59 +221,59 @@ export const LoginPage: React.FC = () => {
         {mode === 'customer-register' && (
           <div>
             <div className="text-center mb-6">
-              <h2 className="font-serif text-2xl font-black text-white">Đăng Ký Tài Khoản</h2>
-              <p className="text-xs text-slate-400 mt-1 font-light">Nhận ngay ưu đãi thành viên Hương Sen</p>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-lotus-900">Đăng Ký Tài Khoản</h2>
+              <p className="text-xs text-wood-600 mt-1 font-serif">Trở thành thành viên thân thiết Hương Sen</p>
             </div>
 
-            <form onSubmit={handleCustomerRegister} className="space-y-3.5">
+            <form onSubmit={handleCustomerRegister} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Họ và tên *</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Họ và tên *</label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
+                  <User className="w-4 h-4 text-wood-400 absolute left-4 top-3" />
                   <input
                     type="text"
                     required
                     value={regFullName}
                     onChange={(e) => setRegFullName(e.target.value)}
                     placeholder="Nguyễn Văn A"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Số điện thoại *</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Số điện thoại *</label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
+                  <Phone className="w-4 h-4 text-wood-400 absolute left-4 top-3" />
                   <input
                     type="tel"
                     required
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
                     placeholder="0901234567"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Email</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Email (tùy chọn)</label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
+                  <Mail className="w-4 h-4 text-wood-400 absolute left-4 top-3" />
                   <input
                     type="email"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     placeholder="nguyenvana@gmail.com"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Mật khẩu (ít nhất 6 ký tự) *</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Mật khẩu (ít nhất 6 ký tự) *</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
+                  <Lock className="w-4 h-4 text-wood-400 absolute left-4 top-3" />
                   <input
                     type="password"
                     required
@@ -274,7 +281,7 @@ export const LoginPage: React.FC = () => {
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="••••••"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
@@ -282,7 +289,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-xs rounded-2xl shadow-xl shadow-orange-500/25 transition disabled:opacity-50 hover:scale-[1.02] mt-2"
+                className="w-full py-3.5 bg-lotus-800 hover:bg-lotus-900 text-cream-50 font-bold text-xs rounded-xl shadow-subtle transition disabled:opacity-50 active:scale-98 mt-2"
               >
                 {loading ? 'Đang tạo tài khoản...' : 'Tạo Tài Khoản Thành Viên'}
               </button>
@@ -294,37 +301,37 @@ export const LoginPage: React.FC = () => {
         {mode === 'staff' && (
           <div>
             <div className="text-center mb-6">
-              <h2 className="font-serif text-2xl font-black text-white">Vận Hành & Quản Trị</h2>
-              <p className="text-xs text-slate-400 mt-1 font-light">Dành cho Admin, Thu ngân, Bếp trưởng & Phục vụ</p>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-lotus-900">Vận Hành & Quản Trị</h2>
+              <p className="text-xs text-wood-600 mt-1 font-serif">Dành cho Admin, Thu ngân, Bếp trưởng & Phục vụ</p>
             </div>
 
             <form onSubmit={handleStaffLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">Email nhân viên</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Email nội bộ</label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
+                  <Mail className="w-4 h-4 text-wood-400 absolute left-4 top-3.5" />
                   <input
                     type="email"
                     required
                     value={staffEmail}
                     onChange={(e) => setStaffEmail(e.target.value)}
                     placeholder="admin@rms.com"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">Mật khẩu</label>
+                <label className="block text-xs font-bold text-wood-800 mb-1">Mật khẩu</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-4 top-4" />
+                  <Lock className="w-4 h-4 text-wood-400 absolute left-4 top-3.5" />
                   <input
                     type="password"
                     required
                     value={staffPassword}
                     onChange={(e) => setStaffPassword(e.target.value)}
                     placeholder="••••••"
-                    className="w-full bg-dark-850 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-cream-50 border border-wood-200 rounded-xl pl-11 pr-4 py-2.5 text-xs text-wood-900 placeholder-wood-400 focus:outline-none focus:border-lotus-600 shadow-subtle"
                   />
                 </div>
               </div>
@@ -332,52 +339,52 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-xs rounded-2xl shadow-xl shadow-orange-500/25 transition disabled:opacity-50 hover:scale-[1.02]"
+                className="w-full py-3.5 bg-lotus-800 hover:bg-lotus-900 text-cream-50 font-bold text-xs rounded-xl shadow-subtle transition disabled:opacity-50 active:scale-98"
               >
                 {loading ? 'Đang xác thực...' : 'Đăng Nhập Quản Trị'}
               </button>
             </form>
 
             {/* Quick Demo Buttons */}
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 text-center mb-3">
-                Đăng Nhập Nhanh 1-Chạm (Dành Cho Thuyết Trình)
+            <div className="mt-6 pt-5 border-t border-wood-200">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-ochre-700 text-center mb-2.5">
+                Đăng Nhập Nhanh 1-Chạm (Dành Cho Giảng Viên & Test Chức Năng)
               </p>
-              <div className="grid grid-cols-2 gap-2.5 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('admin@rms.com', '123456', '/admin')}
-                  className="p-3 rounded-2xl bg-dark-850 hover:bg-dark-800 border border-white/10 text-slate-200 text-left transition hover:border-amber-500/40"
+                  className="p-2.5 rounded-xl bg-cream-50 hover:bg-cream-100 border border-wood-200 text-left transition hover:border-lotus-400 shadow-subtle"
                 >
-                  <p className="font-serif font-bold text-white text-xs">Admin</p>
-                  <p className="text-[10px] text-slate-400 truncate">admin@rms.com</p>
+                  <p className="font-serif font-bold text-lotus-900 text-xs">Quản Trị Viên (Admin)</p>
+                  <p className="text-[10px] text-wood-500 truncate">admin@rms.com</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('cashier@rms.com', '123456', '/pos')}
-                  className="p-3 rounded-2xl bg-dark-850 hover:bg-dark-800 border border-white/10 text-slate-200 text-left transition hover:border-blue-500/40"
+                  className="p-2.5 rounded-xl bg-cream-50 hover:bg-cream-100 border border-wood-200 text-left transition hover:border-lotus-400 shadow-subtle"
                 >
-                  <p className="font-serif font-bold text-white text-xs">Thu Ngân (POS)</p>
-                  <p className="text-[10px] text-slate-400 truncate">cashier@rms.com</p>
+                  <p className="font-serif font-bold text-lotus-900 text-xs">Thu Ngân (POS)</p>
+                  <p className="text-[10px] text-wood-500 truncate">cashier@rms.com</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('chef@rms.com', '123456', '/kds')}
-                  className="p-3 rounded-2xl bg-dark-850 hover:bg-dark-800 border border-white/10 text-slate-200 text-left transition hover:border-emerald-500/40"
+                  className="p-2.5 rounded-xl bg-cream-50 hover:bg-cream-100 border border-wood-200 text-left transition hover:border-lotus-400 shadow-subtle"
                 >
-                  <p className="font-serif font-bold text-white text-xs">Bếp Trưởng (KDS)</p>
-                  <p className="text-[10px] text-slate-400 truncate">chef@rms.com</p>
+                  <p className="font-serif font-bold text-lotus-900 text-xs">Bếp Trưởng (KDS)</p>
+                  <p className="text-[10px] text-wood-500 truncate">chef@rms.com</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('waiter@rms.com', '123456', '/pos')}
-                  className="p-3 rounded-2xl bg-dark-850 hover:bg-dark-800 border border-white/10 text-slate-200 text-left transition hover:border-amber-500/40"
+                  className="p-2.5 rounded-xl bg-cream-50 hover:bg-cream-100 border border-wood-200 text-left transition hover:border-lotus-400 shadow-subtle"
                 >
-                  <p className="font-serif font-bold text-white text-xs">Phục Vụ</p>
-                  <p className="text-[10px] text-slate-400 truncate">waiter@rms.com</p>
+                  <p className="font-serif font-bold text-lotus-900 text-xs">Phục Vụ Bàn</p>
+                  <p className="text-[10px] text-wood-500 truncate">waiter@rms.com</p>
                 </button>
               </div>
             </div>
@@ -387,3 +394,4 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
+export default LoginPage;

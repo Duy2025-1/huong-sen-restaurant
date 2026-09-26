@@ -72,7 +72,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
         <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400 font-medium">
           <span className="hidden sm:inline hover:text-slate-200 cursor-pointer">
-            Hệ Thống RMS
+            HƯƠNG SEN Quản Trị
           </span>
           <span className="hidden sm:inline text-slate-600">/</span>
           <span className="text-amber-400 font-semibold flex items-center gap-1.5">

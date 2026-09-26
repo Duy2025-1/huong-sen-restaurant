@@ -4,45 +4,50 @@
 
 @layer base {
   body {
-    @apply bg-dark-900 text-slate-100 font-sans antialiased;
+    @apply bg-cream-100 text-wood-900 font-sans antialiased selection:bg-lotus-800 selection:text-white;
   }
 
-  h1, h2, h3 {
-    @apply tracking-tight;
+  h1, h2, h3, h4 {
+    @apply font-serif tracking-normal text-wood-950;
   }
 }
 
 @layer utilities {
-  .glass-card {
-    @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+  /* Editorial restaurant cards - clean, warm, refined */
+  .editorial-card {
+    @apply bg-white border border-wood-900/10 rounded-soft shadow-subtle transition-all duration-300;
   }
   
-  .glass-card-hover {
-    @apply glass-card hover:border-amber-500/30 hover:bg-slate-900/80 transition-all duration-300;
+  .editorial-card-hover {
+    @apply editorial-card hover:shadow-lift hover:border-lotus-800/30;
   }
 
-  .gold-gradient-text {
-    @apply bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent;
+  /* Classic restaurant menu dot leader */
+  .menu-dot-leader {
+    flex-grow: 1;
+    border-bottom: 1.5px dotted rgba(45, 35, 25, 0.25);
+    margin: 0 10px 4px 10px;
+    height: 1px;
   }
 
-  .silver-gradient-text {
-    @apply bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent;
+  /* Warm paper texture / background */
+  .bg-warm-paper {
+    background-color: #FAF7F2;
   }
 }
 
-/* Custom Sleek Scrollbar */
+/* Warm, unobtrusive scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #070a12;
+  background: #F4EFEA;
 }
 ::-webkit-scrollbar-thumb {
-  background: #232d42;
+  background: #C2DACD;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d97706;
+  background: #234E3F;
 }

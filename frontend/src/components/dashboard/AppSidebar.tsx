@@ -138,16 +138,16 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             onClick={() => navigate('/admin')}
             className="flex items-center gap-3 cursor-pointer group overflow-hidden"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
-              <Crown className="h-5 w-5 fill-slate-950 stroke-slate-950" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lotus-800 text-cream-50 shadow-md group-hover:scale-105 transition-transform font-serif font-bold text-lg">
+              S
             </div>
             {!isCollapsed && (
               <div className="flex flex-col truncate">
                 <span className="font-serif font-bold text-base tracking-wide text-white group-hover:text-amber-400 transition-colors truncate">
-                  ROYAL FEAST
+                  HƯƠNG SEN
                 </span>
                 <span className="text-[10px] uppercase tracking-wider font-semibold text-amber-500/90">
-                  RMS Enterprise v2.5
+                  Quản Trị Nhà Hàng
                 </span>
               </div>
             )}

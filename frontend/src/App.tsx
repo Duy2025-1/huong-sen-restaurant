@@ -20,11 +20,15 @@ import { LoginPage } from './pages/auth/LoginPage';
 const AppContent: React.FC = () => {
   const location = useLocation();
   const isAdminDashboard = location.pathname.startsWith('/admin');
+  const isOperational = location.pathname.startsWith('/pos') || location.pathname.startsWith('/kds');
+  const isTableOrdering = location.pathname.startsWith('/table');
+  const hideGlobalNav = isAdminDashboard || isOperational || isTableOrdering;
+  const isDarkOperational = isAdminDashboard || isOperational;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950">
-      {!isAdminDashboard && <Navbar />}
-      {!isAdminDashboard && <CartDrawer />}
+    <div className={`min-h-screen flex flex-col font-sans ${isDarkOperational ? 'bg-slate-950 text-slate-100 selection:bg-lotus-600 selection:text-white' : 'bg-cream-100 text-wood-900 selection:bg-lotus-800 selection:text-white'}`}>
+      {!hideGlobalNav && <Navbar />}
+      {!hideGlobalNav && <CartDrawer />}
       <main className="flex-1">
         <Routes>
           {/* 1. Customer Public Portal */}
