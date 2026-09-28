@@ -411,5 +411,5 @@ Cơ sở dữ liệu của project có sẵn dữ liệu mẫu phục vụ quá 
 * **Môn học**: Lập trình Web
 * **Nhóm sinh viên thực hiện**: [Bổ sung tên nhóm / thành viên]
 * **Giảng viên hướng dẫn**: [Bổ sung tên giảng viên]
-* **Trường**: [TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TPHCM]
+* **Trường**: Trường Đại Học GTVT TPHCM
 * **Năm học**: 2025 - 2026
