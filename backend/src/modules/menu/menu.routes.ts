@@ -239,14 +239,38 @@ router.post('/dish/:id/reviews', async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Món ăn không tồn tại.' });
     }
 
+    // Verify purchase against real completed orders
+    let isVerified = false;
+    let matchingOrderId: number | null = null;
+
+    const matchingOrder = await prisma.order.findFirst({
+      where: {
+        status: 'completed',
+        orderItems: {
+          some: { dishId },
+        },
+        OR: [
+          { customerName: { equals: userName.trim() } },
+          { customer: { fullName: { equals: userName.trim() } } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (matchingOrder) {
+      isVerified = true;
+      matchingOrderId = matchingOrder.id;
+    }
+
     const review = await prisma.review.create({
       data: {
         dishId,
+        orderId: matchingOrderId,
         userName: userName.trim().slice(0, 100),
         avatar: avatar && typeof avatar === 'string' ? avatar.trim() : null,
         rating: Math.round(numRating * 10) / 10,
         comment: comment.trim().slice(0, 500),
-        verifiedPurchase: true,
+        verifiedPurchase: isVerified,
       },
     });
 

@@ -12,6 +12,9 @@ import reservationsRoutes from './modules/reservations/reservations.routes.js';
 import paymentsRoutes from './modules/payments/payments.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
 
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
+import inventoryRoutes from './modules/inventory/inventory.routes.js';
+
 export function createApp() {
   const app = express();
 
@@ -87,6 +90,8 @@ export function createApp() {
   app.use('/api/reservations', reservationsRoutes);
   app.use('/api/payments', paymentsRoutes);
   app.use('/api/reports', reportsRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/inventory', inventoryRoutes);
 
   // 8. 404 Route Handler
   app.use((req, res) => {

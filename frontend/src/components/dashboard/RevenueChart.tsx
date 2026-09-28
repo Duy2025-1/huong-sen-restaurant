@@ -13,21 +13,23 @@ interface RevenueChartProps {
   data?: Array<{ name: string; total: number; orders: number }>;
 }
 
-const defaultData = [
-  { name: '10:00', total: 680000, orders: 3 },
-  { name: '12:00', total: 2450000, orders: 12 },
-  { name: '14:00', total: 1120000, orders: 5 },
-  { name: '16:00', total: 890000, orders: 4 },
-  { name: '18:00', total: 3820000, orders: 18 },
-  { name: '20:00', total: 4650000, orders: 22 },
-  { name: '22:00', total: 1780000, orders: 9 },
+const defaultEmptyHours = [
+  { name: '10:00', total: 0, orders: 0 },
+  { name: '12:00', total: 0, orders: 0 },
+  { name: '14:00', total: 0, orders: 0 },
+  { name: '16:00', total: 0, orders: 0 },
+  { name: '18:00', total: 0, orders: 0 },
+  { name: '20:00', total: 0, orders: 0 },
+  { name: '22:00', total: 0, orders: 0 },
 ];
 
-export const RevenueChart: React.FC<RevenueChartProps> = ({ data = defaultData }) => {
+export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
+  const chartData = data && data.length > 0 ? data : defaultEmptyHours;
+
   return (
     <div className="h-[320px] w-full pt-4">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+        <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
           <defs>
             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />

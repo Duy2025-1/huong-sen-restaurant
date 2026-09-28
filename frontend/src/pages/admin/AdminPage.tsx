@@ -367,11 +367,11 @@ export const AdminPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    {stats?.revenueToday ? stats.revenueToday.toLocaleString('vi-VN') : '14.850.000'} đ
+                    {(stats?.revenueToday ?? 0).toLocaleString('vi-VN')} đ
                   </div>
-                  <p className="text-xs text-emerald-400 flex items-center gap-1 mt-1 font-medium">
-                    <TrendingUp className="h-3 w-3" />
-                    +20.1% so với tuần trước
+                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 font-medium">
+                    <TrendingUp className="h-3 w-3 text-emerald-400" />
+                    Tính từ các đơn hoàn tất và thanh toán hôm nay
                   </p>
                 </CardContent>
               </Card>
@@ -387,11 +387,11 @@ export const AdminPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    +{stats?.orderCountToday || orders.length || 24} đơn
+                    {stats?.orderCountToday ?? 0} đơn
                   </div>
-                  <p className="text-xs text-emerald-400 flex items-center gap-1 mt-1 font-medium">
-                    <TrendingUp className="h-3 w-3" />
-                    +12% lượng khách giờ cao điểm
+                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 font-medium">
+                    <TrendingUp className="h-3 w-3 text-emerald-400" />
+                    Đơn hàng ghi nhận trong ngày
                   </p>
                 </CardContent>
               </Card>
@@ -407,16 +407,10 @@ export const AdminPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    {stats?.occupiedTables || 4} / {stats?.totalTables || 15} bàn
+                    {stats?.occupiedTables ?? 0} / {stats?.totalTables ?? 0} bàn
                   </div>
                   <p className="text-xs text-amber-400 mt-1 font-medium">
-                    Công suất đạt{' '}
-                    {Math.round(
-                      ((stats?.occupiedTables || 4) /
-                        (stats?.totalTables || 15)) *
-                        100
-                    )}
-                    %
+                    Công suất đạt {stats?.tableOccupancyRate ?? 0}%
                   </p>
                 </CardContent>
               </Card>
@@ -432,11 +426,11 @@ export const AdminPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    10.4 Phút / Món
+                    {stats?.averagePreparationTime ? `${stats.averagePreparationTime} Phút / Món` : 'Chưa có dữ liệu'}
                   </div>
-                  <p className="text-xs text-emerald-400 flex items-center gap-1 mt-1 font-medium">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Đạt 98.5% chuẩn SLA bếp
+                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 font-medium">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                    Tính từ thời điểm bếp nhận đến khi ra món
                   </p>
                 </CardContent>
               </Card>
@@ -448,11 +442,11 @@ export const AdminPage: React.FC = () => {
                 <CardHeader>
                   <CardTitle>Biểu Đồ Doanh Thu Hôm Nay</CardTitle>
                   <CardDescription>
-                    Doanh thu tích lũy phân bổ theo từng khung giờ phục vụ
+                    Doanh thu tích lũy phân bổ theo từng khung giờ phục vụ thực tế (Asia/Ho_Chi_Minh)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RevenueChart />
+                  <RevenueChart data={stats?.hourlyRevenue} />
                 </CardContent>
               </Card>
 
@@ -460,24 +454,11 @@ export const AdminPage: React.FC = () => {
                 <CardHeader>
                   <CardTitle>Top Món Bán Chạy Nhất</CardTitle>
                   <CardDescription>
-                    Xếp hạng theo sản lượng và tổng doanh thu thực tế
+                    Xếp hạng theo sản lượng và tổng doanh thu thực tế từ OrderItem
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <TopDishesChart
-                    dishes={
-                      stats?.topDishes && stats.topDishes.length > 0
-                        ? stats.topDishes
-                        : allDishes.slice(0, 5).map((d: any, idx: number) => ({
-                            dishId: d.id,
-                            name: d.name,
-                            price: d.price,
-                            imageUrl: d.imageUrl,
-                            totalSold: 35 - idx * 6,
-                            totalRevenue: (35 - idx * 6) * d.price,
-                          }))
-                    }
-                  />
+                  <TopDishesChart dishes={stats?.topDishes || []} />
                 </CardContent>
               </Card>
             </div>

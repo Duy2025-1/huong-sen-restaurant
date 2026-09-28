@@ -7,6 +7,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// 1. CHI NHÁNH NHÀ HÀNG
 model Branch {
   id              Int              @id @default(autoincrement())
   name            String
@@ -14,75 +15,97 @@ model Branch {
   address         String
   isActive        Boolean          @default(true)
   createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
   areas           Area[]
   staffUsers      StaffUser[]
   kitchenStations KitchenStation[]
   orders          Order[]
   reservations    Reservation[]
+  inventories     Ingredient[]
 }
 
+// 2. PHÂN QUYỀN & VAI TRÒ
 model Role {
   id          Int         @id @default(autoincrement())
-  code        String      @unique // admin, manager, cashier, waiter, chef
+  code        String      @unique // admin, manager, cashier, waiter, chef, staff
   name        String
-  permissions String      @default("[]") // JSON string of permissions
+  permissions String      @default("[]") // JSON string of permission codes
   users       StaffUser[]
 }
 
+// 3. NHÂN VIÊN VẬN HÀNH (STAFF)
 model StaffUser {
-  id           Int            @id @default(autoincrement())
-  branchId     Int?
-  branch       Branch?        @relation(fields: [branchId], references: [id])
-  roleId       Int
-  role         Role           @relation(fields: [roleId], references: [id])
-  fullName     String
-  email        String         @unique
-  phone        String         @unique
-  passwordHash String
-  isActive     Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  sessions     TableSession[]
-  orders       Order[]
-  payments     Payment[]
+  id                    Int                    @id @default(autoincrement())
+  branchId              Int?
+  branch                Branch?                @relation(fields: [branchId], references: [id])
+  roleId                Int
+  role                  Role                   @relation(fields: [roleId], references: [id])
+  fullName              String
+  email                 String                 @unique
+  phone                 String                 @unique
+  passwordHash          String
+  isActive              Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  sessionsOpened        TableSession[]         @relation("SessionOpenedBy")
+  ordersCreated         Order[]                @relation("OrderCreatedBy")
+  paymentsProcessed     Payment[]              @relation("PaymentCashier")
+  inventoryTransactions InventoryTransaction[] @relation("InventoryStaff")
+  auditLogs             AuditLog[]             @relation("AuditStaff")
+  statusHistories       OrderStatusHistory[]   @relation("StatusHistoryStaff")
 }
 
+// 4. THÀNH VIÊN & KHÁCH HÀNG (CUSTOMER)
 model Customer {
-  id           Int           @id @default(autoincrement())
-  fullName     String
-  phone        String        @unique
-  email        String?       @unique
-  passwordHash String?
-  pointBalance Int           @default(0)
-  createdAt    DateTime      @default(now())
-  orders       Order[]
-  reservations Reservation[]
+  id             Int              @id @default(autoincrement())
+  fullName       String
+  phone          String           @unique
+  email          String?          @unique
+  passwordHash   String?
+  pointBalance   Int              @default(0)
+  totalSpent     Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  orders         Order[]
+  reservations   Reservation[]
+  promotionUsage PromotionUsage[]
+  reviews        Review[]
 }
 
+// 5. KHU VỰC KHÔNG GIAN BÀN
 model Area {
   id           Int      @id @default(autoincrement())
   branchId     Int
   branch       Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  name         String   // Tầng 1, Tầng 2, Sân Vườn, VIP
+  name         String   // Sảnh Mộc, Hiên Sen, Phòng VIP
   displayOrder Int      @default(0)
   tables       Table[]
 }
 
+// 6. BÀN ĂN (TABLE)
 model Table {
   id           Int            @id @default(autoincrement())
   areaId       Int
   area         Area           @relation(fields: [areaId], references: [id], onDelete: Cascade)
   tableNumber  String         // B01, VIP-01
   capacity     Int            @default(4)
-  status       String         @default("available") // available, reserved, occupied, cleaning
-  qrToken      String         @unique // Mã token định danh cố định để tạo QR
+  status       String         @default("available") // available, reserved, occupied, cleaning, out_of_service
+  qrToken      String         @unique // Mã token cố định in tem QR dán bàn
   posX         Int            @default(0)
   posY         Int            @default(0)
   isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
   sessions     TableSession[]
   orders       Order[]
   reservations Reservation[]
 }
 
+// 7. PHIÊN DÙNG BỮA TẠI BÀN (TABLE SESSION)
 model TableSession {
   id           Int       @id @default(autoincrement())
   tableId      Int
@@ -90,23 +113,29 @@ model TableSession {
   sessionToken String    @unique
   guestCount   Int       @default(1)
   openedById   Int?
-  openedBy     StaffUser? @relation(fields: [openedById], references: [id])
+  openedBy     StaffUser? @relation("SessionOpenedBy", fields: [openedById], references: [id])
   openedAt     DateTime  @default(now())
   closedAt     DateTime?
   isActive     Boolean   @default(true)
+  status       String    @default("active") // active, closed
+
   orders       Order[]
 }
 
+// 8. BỘ PHẬN BẾP & QUẦY BAR (KITCHEN STATION)
 model KitchenStation {
-  id         Int         @id @default(autoincrement())
-  branchId   Int
-  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  name       String      // Bếp Nấu, Bếp Nướng, Quầy Bar
-  isActive   Boolean     @default(true)
-  dishes     Dish[]
-  orderItems OrderItem[]
+  id             Int             @id @default(autoincrement())
+  branchId       Int
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name           String          // Bếp Nấu, Bếp Kho/Nướng, Bếp Canh, Quầy Nước
+  isActive       Boolean         @default(true)
+
+  dishes         Dish[]
+  orderItems     OrderItem[]
+  kitchenTickets KitchenTicket[]
 }
 
+// 9. DANH MỤC MÓN ĂN (CATEGORY)
 model Category {
   id           Int      @id @default(autoincrement())
   name         String
@@ -114,9 +143,13 @@ model Category {
   imageUrl     String?
   displayOrder Int      @default(0)
   isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   dishes       Dish[]
 }
 
+// 10. MÓN ĂN THUẦN VIỆT HƯƠNG SEN (DISH / PRODUCT)
 model Dish {
   id                     Int                  @id @default(autoincrement())
   categoryId             Int
@@ -127,21 +160,22 @@ model Dish {
   slug                   String               @unique
   description            String?
   shortDescription       String?
-  price                  Float
+  price                  Float                // Giá bán thực tế
+  costPrice              Float                @default(0) // Giá vốn chế biến
   originalPrice          Float?
   discountedPrice        Float?
   discount               Int?                 @default(0)
   currency               String               @default("VND")
   imageUrl               String?
   gallery                String               @default("[]") // JSON string of images
-  rating                 Float                @default(4.8)
+  rating                 Float                @default(5.0)
   reviewCount            Int                  @default(0)
   soldCount              Int                  @default(0)
   isAvailable            Boolean              @default(true) // false = Hết món (86)
   isBestSeller           Boolean              @default(false)
   isNew                  Boolean              @default(false)
   isPopular              Boolean              @default(false)
-  preparationTimeMinutes Int                  @default(10)
+  preparationTimeMinutes Int                  @default(12)
   servingSize            String?              @default("1 phần")
   calories               Int?                 @default(450)
   spicyLevel             String               @default("NONE") // NONE, MILD, MEDIUM, HOT, EXTRA_HOT
@@ -150,30 +184,22 @@ model Dish {
   nutrition              String               @default("{}") // JSON string of nutrition
   tags                   String               @default("[]") // JSON string of tags
   createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
   orderItems             OrderItem[]
   modifierGroups         DishModifierGroup[]
   reviews                Review[]
+  recipe                 Recipe?
 }
 
-model Review {
-  id               Int      @id @default(autoincrement())
-  dishId           Int
-  dish             Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  userName         String
-  avatar           String?
-  rating           Float    @default(5)
-  comment          String
-  createdAt        DateTime @default(now())
-  verifiedPurchase Boolean  @default(true)
-  helpfulCount     Int      @default(0)
-}
-
+// 11. NHÓM TÙY CHỌN & ADD-ON (MODIFIER GROUP)
 model ModifierGroup {
   id          Int                  @id @default(autoincrement())
-  name        String               // Chọn Size, Topping Thêm, Mức cay
+  name        String               // Khẩu vị cay, Size phần ăn, Ăn kèm thêm
   isRequired  Boolean              @default(false)
   minSelect   Int                  @default(0)
   maxSelect   Int                  @default(1)
+
   items       ModifierItem[]
   dishes      DishModifierGroup[]
 }
@@ -191,15 +217,79 @@ model ModifierItem {
   id                 Int                 @id @default(autoincrement())
   groupId            Int
   group              ModifierGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  name               String              // Size L, Thêm Phô Mai, Trân châu
+  name               String              // Ít cay, Cơm thêm, Hạt sen thêm
   additionalPrice    Float               @default(0)
   isAvailable        Boolean             @default(true)
+
   orderItemModifiers OrderItemModifier[]
 }
 
+// 12. NGUYÊN LIỆU KHO (INGREDIENT / INVENTORY)
+model Ingredient {
+  id           Int                    @id @default(autoincrement())
+  branchId     Int                    @default(1)
+  branch       Branch                 @relation(fields: [branchId], references: [id])
+  code         String                 @unique // ING-GA-TA, ING-GAO-ST25
+  name         String                 // Gà ta thả vườn, Gạo ST25, Hạt sen tươi, Tôm sú sống
+  unit         String                 // kg, g, lít, ml, con, quả
+  currentStock Float                  @default(0)
+  minStock     Float                  @default(10) // Ngưỡng cảnh báo sắp hết hàng
+  costPrice    Float                  @default(0) // Giá nhập trung bình
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  transactions InventoryTransaction[]
+  recipeItems  RecipeItem[]
+}
+
+// 13. BIẾN ĐỘNG KHO (INVENTORY TRANSACTION)
+model InventoryTransaction {
+  id            Int         @id @default(autoincrement())
+  ingredientId  Int
+  ingredient    Ingredient  @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  staffId       Int?
+  staff         StaffUser?  @relation("InventoryStaff", fields: [staffId], references: [id])
+  orderId       Int?
+  order         Order?      @relation(fields: [orderId], references: [id])
+
+  type          String      // IN (Nhập kho), OUT (Xuất bếp nấu), ADJUSTMENT (Kiểm kê cân đối), WASTE (Hao hụt/Hỏng)
+  quantity      Float       // Số lượng biến động (+ hoặc -)
+  previousStock Float
+  newStock      Float
+  unitCost      Float       @default(0)
+  note          String?
+  createdAt     DateTime    @default(now())
+}
+
+// 14. CÔNG THỨC & ĐỊNH LƯỢNG MÓN ĂN (RECIPE)
+model Recipe {
+  id          Int          @id @default(autoincrement())
+  dishId      Int          @unique
+  dish        Dish         @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  note        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  recipeItems RecipeItem[]
+}
+
+model RecipeItem {
+  id           Int        @id @default(autoincrement())
+  recipeId     Int
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientId Int
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  quantity     Float      // Số lượng tiêu hao cho 1 phần ăn
+  unit         String     // kg, g, ml, con
+
+  @@unique([recipeId, ingredientId])
+}
+
+// 15. ĐƠN HÀNG (ORDER)
 model Order {
   id              Int            @id @default(autoincrement())
-  code            String         @unique // ORD-20260924-001
+  code            String         @unique // HS-20260928-0001
+  idempotencyKey  String?        @unique // Chống duplicate submit
   branchId        Int
   branch          Branch         @relation(fields: [branchId], references: [id])
   sessionId       Int?
@@ -209,15 +299,16 @@ model Order {
   customerId      Int?
   customer        Customer?      @relation(fields: [customerId], references: [id])
   createdById     Int?
-  createdBy       StaffUser?     @relation(fields: [createdById], references: [id])
+  createdBy       StaffUser?     @relation("OrderCreatedBy", fields: [createdById], references: [id])
   
   orderType       String         @default("dine_in") // dine_in, takeout, delivery
-  status          String         @default("pending") // pending, preparing, ready, completed, cancelled
+  status          String         @default("pending") // pending, confirmed, preparing, ready, served, out_for_delivery, completed, cancelled, refunded
   paymentStatus   String         @default("unpaid")  // unpaid, partially_paid, paid, refunded
 
   subtotalAmount  Float          @default(0)
   discountAmount  Float          @default(0)
   taxAmount       Float          @default(0)
+  deliveryFee     Float          @default(0)
   totalAmount     Float          @default(0)
 
   deliveryAddress String?
@@ -230,8 +321,27 @@ model Order {
 
   orderItems      OrderItem[]
   payments        Payment[]
+  statusHistories OrderStatusHistory[]
+  kitchenTickets  KitchenTicket[]
+  inventoryLogs   InventoryTransaction[]
+  promotionUsages PromotionUsage[]
+  reviews         Review[]
 }
 
+// 16. LỊCH SỬ CHUYỂN TRẠNG THÁI ĐƠN HÀNG (ORDER STATUS HISTORY)
+model OrderStatusHistory {
+  id          Int        @id @default(autoincrement())
+  orderId     Int
+  order       Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus  String?
+  toStatus    String
+  changedById Int?
+  changedBy   StaffUser? @relation("StatusHistoryStaff", fields: [changedById], references: [id])
+  reason      String?
+  createdAt   DateTime   @default(now())
+}
+
+// 17. CHI TIẾT MÓN TRONG ĐƠN (ORDER ITEM)
 model OrderItem {
   id              Int                 @id @default(autoincrement())
   orderId         Int
@@ -240,9 +350,12 @@ model OrderItem {
   dish            Dish                @relation(fields: [dishId], references: [id])
   stationId       Int?
   station         KitchenStation?     @relation(fields: [stationId], references: [id])
+  ticketId        Int?
+  ticket          KitchenTicket?      @relation(fields: [ticketId], references: [id])
 
+  dishNameSnapshot String?            // Lưu tên món lúc đặt (bảo toàn lịch sử)
   quantity        Int                 @default(1)
-  unitPrice       Float
+  unitPrice       Float               // Giá tại thời điểm đặt (SNAPSHOT)
   modifiersPrice  Float               @default(0)
   totalPrice      Float
 
@@ -257,36 +370,107 @@ model OrderItem {
   cancelledReason String?
 
   createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
   modifiers       OrderItemModifier[]
 }
 
+// 18. TÙY CHỌN MÓN ĐÃ CHỌN (ORDER ITEM MODIFIER)
 model OrderItemModifier {
   id             Int          @id @default(autoincrement())
   orderItemId    Int
   orderItem      OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
   modifierItemId Int
   modifierItem   ModifierItem @relation(fields: [modifierItemId], references: [id])
-  nameAtTime     String
-  priceAtTime    Float
+  nameAtTime     String       // Snapshot tên tùy chọn
+  priceAtTime    Float        // Snapshot giá tùy chọn
 }
 
+// 19. PHIẾU BẾP / KDS TICKET (KITCHEN TICKET)
+model KitchenTicket {
+  id           Int             @id @default(autoincrement())
+  orderId      Int
+  order        Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stationId    Int?
+  station      KitchenStation? @relation(fields: [stationId], references: [id])
+  ticketCode   String          @unique // TKT-20260928-001
+  status       String          @default("pending") // pending, preparing, ready, completed, cancelled
+  roundNumber  Int             @default(1)
+  createdAt    DateTime        @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  items        OrderItem[]
+}
+
+// 20. KHUYẾN MÃI & COUPON (PROMOTION)
+model Promotion {
+  id                Int              @id @default(autoincrement())
+  code              String           @unique // SENXANH10, HUONGSEN50K
+  name              String
+  description       String?
+  discountType      String           // PERCENT (giảm %) hoặc FIXED (giảm số tiền cố định)
+  discountValue     Float            // 10 (%) hoặc 50000 (đ)
+  minOrderAmount    Float            @default(0)
+  maxDiscountAmount Float?
+  startDate         DateTime
+  endDate           DateTime
+  usageLimit        Int?             @default(100)
+  usageCount        Int              @default(0)
+  isActive          Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+
+  usages            PromotionUsage[]
+}
+
+model PromotionUsage {
+  id             Int       @id @default(autoincrement())
+  promotionId    Int
+  promotion      Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  orderId        Int
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId     Int?
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  discountAmount Float
+  usedAt         DateTime  @default(now())
+
+  @@unique([promotionId, orderId])
+}
+
+// 21. THANH TOÁN (PAYMENT)
 model Payment {
-  id              Int       @id @default(autoincrement())
+  id              Int                  @id @default(autoincrement())
   orderId         Int
-  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order           Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
   cashierId       Int?
-  cashier         StaffUser? @relation(fields: [cashierId], references: [id])
+  cashier         StaffUser?           @relation("PaymentCashier", fields: [cashierId], references: [id])
 
-  method          String    // cash, vnpay, momo, bank_transfer, card
+  method          String               // cash, vnpay, vietqr, transfer, card, momo
   amount          Float
-  paymentStatus   String    @default("paid") // paid, refunded
-  transactionCode String?
+  paymentStatus   String               @default("paid") // pending, processing, paid, failed, cancelled, refunded
+  transactionCode String?              @unique
   note            String?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  transactions    PaymentTransaction[]
 }
 
+model PaymentTransaction {
+  id            Int      @id @default(autoincrement())
+  paymentId     Int
+  payment       Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  provider      String   // VNPAY, VIETQR, CASH, MOMO
+  transactionId String?
+  amount        Float
+  status        String   // SUCCESS, FAILED, PENDING
+  rawResponse   String?  // JSON string from payment gateway
+  createdAt     DateTime @default(now())
+}
+
+// 22. ĐẶT BÀN TRƯỚC (RESERVATION)
 model Reservation {
   id              Int       @id @default(autoincrement())
+  code            String?   @unique // RES-20260928-001
   branchId        Int
   branch          Branch    @relation(fields: [branchId], references: [id])
   customerId      Int?
@@ -298,9 +482,45 @@ model Reservation {
   customerPhone   String
   guestCount      Int       @default(2)
   reservationTime DateTime
+  endTime         DateTime? // Thời gian dự kiến kết thúc để tránh trùng giờ
 
-  status          String    @default("pending") // pending, confirmed, seated, cancelled, no_show
+  status          String    @default("pending") // pending, confirmed, seated, completed, cancelled, no_show
   depositAmount   Float     @default(0)
   note            String?
   createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// 23. ĐÁNH GIÁ THỰC KHÁCH (REVIEW)
+model Review {
+  id               Int       @id @default(autoincrement())
+  dishId           Int
+  dish             Dish      @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  orderId          Int?
+  order            Order?    @relation(fields: [orderId], references: [id])
+  customerId       Int?
+  customer         Customer? @relation(fields: [customerId], references: [id])
+
+  userName         String
+  avatar           String?
+  rating           Float     @default(5)
+  comment          String
+  verifiedPurchase Boolean   @default(false) // Chỉ true khi xác minh đơn đã completed
+  helpfulCount     Int       @default(0)
+  createdAt        DateTime  @default(now())
+}
+
+// 24. NHẬT KÝ KIỂM TOÁN HỆ THỐNG (AUDIT LOG)
+model AuditLog {
+  id         Int        @id @default(autoincrement())
+  staffId    Int?
+  staff      StaffUser? @relation("AuditStaff", fields: [staffId], references: [id])
+  action     String     // UPDATE_DISH_PRICE, CANCEL_ORDER, REFUND, ADJUST_STOCK, CHANGE_TABLE_STATUS
+  entity     String     // Dish, Order, Payment, Ingredient, Table
+  entityId   Int?
+  oldValue   String?    // JSON string snapshot
+  newValue   String?    // JSON string snapshot
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime   @default(now())
 }
