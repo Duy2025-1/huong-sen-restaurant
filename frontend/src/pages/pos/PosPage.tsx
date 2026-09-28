@@ -8,12 +8,8 @@ import {
   QrCode, 
   Banknote, 
   X, 
-  Clock, 
   Utensils, 
   BellRing,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
   LayoutDashboard
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -111,7 +107,7 @@ export const PosPage: React.FC = () => {
       await api.patch(`/tables/${tableId}/status`, { status: 'available' });
       loadTables();
       setSelectedTable(null);
-    } catch (err) {
+    } catch {
       alert('Lỗi cập nhật trạng thái.');
     }
   };
@@ -505,7 +501,10 @@ export const PosPage: React.FC = () => {
                 <div className="p-4 rounded-2xl bg-dark-850 border border-white/10 text-center">
                   <p className="text-[11px] font-bold text-blue-400 mb-2">Quét mã VietQR thanh toán tự động:</p>
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=RMS_PAYMENT_${selectedTable.tableNumber}_${selectedTable.sessions?.[0]?.orders?.[0]?.totalAmount}`}
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=RMS_PAYMENT_${selectedTable.tableNumber}_${Math.max(
+                      0,
+                      (selectedTable.sessions?.[0]?.orders?.[0]?.subtotalAmount || 0) - discountAmount
+                    )}`}
                     alt="VietQR"
                     className="w-36 h-36 mx-auto rounded-xl bg-white p-1 shadow-lg"
                   />

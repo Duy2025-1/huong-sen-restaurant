@@ -11,7 +11,6 @@ import {
   Volume2, 
   VolumeX,
   XCircle,
-  Sparkles,
   LayoutDashboard
 } from 'lucide-react';
 import { api } from '../../services/api';

@@ -520,6 +520,26 @@ export class OrdersService {
         },
       });
 
+      // Nếu đơn bị hủy, giải phóng phiên bàn và trả bàn về trạng thái available
+      if (nextStatus === 'cancelled') {
+        if (order.sessionId) {
+          await tx.tableSession.update({
+            where: { id: order.sessionId },
+            data: { isActive: false, status: 'closed', closedAt: new Date() },
+          });
+        }
+        if (order.tableId) {
+          await tx.table.update({
+            where: { id: order.tableId },
+            data: { status: 'available' },
+          });
+          broadcastEvent(SocketEvents.TABLE_STATUS_CHANGED, {
+            tableId: order.tableId,
+            status: 'available',
+          });
+        }
+      }
+
       await AuditService.log({
         staffId: changedById,
         action: 'UPDATE_ORDER_STATUS',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Phone, User, ShieldCheck, Receipt, ChefHat, UserCheck, Sparkles } from 'lucide-react';
+import { Lock, Mail, Phone, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../services/api';
 

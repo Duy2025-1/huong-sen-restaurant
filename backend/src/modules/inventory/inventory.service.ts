@@ -34,11 +34,8 @@ export class InventoryService {
    */
   static async getLowStockAlerts() {
     const all = await prisma.ingredient.findMany({
-      where: {
-        currentStock: { lte: prisma.ingredient.fields.minStock as any },
-      },
+      orderBy: { currentStock: 'asc' },
     });
-    // In SQLite, verify directly
     return all.filter((i) => i.currentStock <= i.minStock);
   }
 

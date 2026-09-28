@@ -1,18 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
-  Utensils, 
-  ShoppingBag, 
-  Clock, 
-  CheckCircle2, 
   BellRing, 
-  Flame, 
   Plus, 
   Minus, 
   X, 
   ChefHat, 
-  Receipt,
-  Sparkles
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../../services/api';
@@ -173,7 +166,7 @@ export const TableOrderPage: React.FC = () => {
     try {
       await api.post(`/orders/${currentOrder.id}/request-bill`);
       alert('🔔 Đã gửi yêu cầu thanh toán tới quầy Thu ngân! Nhân viên sẽ mang hóa đơn tới bàn ngay.');
-    } catch (err) {
+    } catch {
       alert('Lỗi gửi yêu cầu thanh toán.');
     }
   };

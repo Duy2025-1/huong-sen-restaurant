@@ -8,10 +8,8 @@ import {
   ArrowRight, 
   Truck, 
   Store, 
-  CreditCard, 
   Banknote, 
   CheckCircle2, 
-  Sparkles,
   QrCode
 } from 'lucide-react';
 import confetti from 'canvas-confetti';

@@ -10,25 +10,12 @@ import {
   Clock,
   Edit2,
   Trash2,
-  Users,
   CheckCircle2,
-  XCircle,
-  Filter,
   Layers,
-  Phone,
-  Mail,
-  UserCheck,
-  Crown,
-  Sparkles,
-  ArrowUpRight,
   Search,
   Download,
   RefreshCw,
   Store,
-  CalendarDays,
-  AlertCircle,
-  ChefHat,
-  Receipt,
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
@@ -52,9 +39,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../../components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
-import { Separator } from '../../components/ui/separator';
 
 export const AdminPage: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
@@ -125,7 +110,7 @@ export const AdminPage: React.FC = () => {
     try {
       await api.patch(`/menu/dishes/${dishId}/toggle-availability`);
       loadData();
-    } catch (err) {
+    } catch {
       alert('Lỗi cập nhật trạng thái món.');
     }
   };
@@ -217,7 +202,7 @@ export const AdminPage: React.FC = () => {
     try {
       await api.patch(`/orders/${orderId}/status`, { status });
       loadData();
-    } catch (err) {
+    } catch {
       alert('Lỗi cập nhật trạng thái đơn.');
     }
   };

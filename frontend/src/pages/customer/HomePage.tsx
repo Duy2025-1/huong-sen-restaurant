@@ -1,24 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   ArrowRight, 
   Clock, 
   MapPin, 
   Phone, 
   Star, 
-  CalendarCheck,
-  Utensils,
   ChevronRight,
   Plus,
-  Quote,
   CheckCircle2,
-  Users
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
 
 export const HomePage: React.FC = () => {
-  const navigate = useNavigate();
   const [featuredDishes, setFeaturedDishes] = useState<any[]>([]);
   const { addToCart } = useCart();
   const [toastMsg, setToastMsg] = useState<string | null>(null);

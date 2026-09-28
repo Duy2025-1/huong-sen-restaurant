@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Store,
@@ -12,12 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Crown,
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { Badge } from '../ui/badge';
 
 interface AppSidebarProps {
   isCollapsed: boolean;

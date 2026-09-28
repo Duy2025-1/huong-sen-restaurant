@@ -242,20 +242,22 @@ router.post(
         return res.status(400).json({ message: 'Bàn gốc không có phiên hoạt động.' });
       }
 
-      // Move session & orders to target table
-      await prisma.tableSession.update({
-        where: { id: currentSession.id },
-        data: { tableId: numTo },
-      });
+      // Move session & orders to target table in ACID transaction
+      await prisma.$transaction(async (tx) => {
+        await tx.tableSession.update({
+          where: { id: currentSession.id },
+          data: { tableId: numTo },
+        });
 
-      await prisma.order.updateMany({
-        where: { sessionId: currentSession.id },
-        data: { tableId: numTo },
-      });
+        await tx.order.updateMany({
+          where: { sessionId: currentSession.id },
+          data: { tableId: numTo },
+        });
 
-      // Reset fromTable, occupy toTable
-      await prisma.table.update({ where: { id: numFrom }, data: { status: 'available' } });
-      await prisma.table.update({ where: { id: numTo }, data: { status: 'occupied' } });
+        // Reset fromTable, occupy toTable
+        await tx.table.update({ where: { id: numFrom }, data: { status: 'available' } });
+        await tx.table.update({ where: { id: numTo }, data: { status: 'occupied' } });
+      });
 
       broadcastEvent(SocketEvents.TABLE_STATUS_CHANGED, {
         fromTableId: numFrom,

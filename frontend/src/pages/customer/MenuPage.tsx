@@ -9,17 +9,13 @@ import {
   Check,
   Sparkles,
   Flame,
-  Tag,
   Star,
   Filter,
   RotateCcw,
   Utensils,
   LayoutGrid,
   List,
-  ChevronRight,
-  ShieldAlert,
   Send,
-  Heart
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
@@ -887,6 +883,9 @@ export const MenuPage: React.FC = () => {
                   </div>
                   <span className="text-wood-400">•</span>
                   <span className="text-wood-600">Đã phục vụ {detailDish.soldCount || 100}+ phần</span>
+                  {loadingDetail && (
+                    <span className="text-[11px] text-lotus-700 font-medium animate-pulse ml-2">Đang tải thêm...</span>
+                  )}
                 </div>
               </div>
 

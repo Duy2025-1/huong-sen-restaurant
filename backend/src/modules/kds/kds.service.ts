@@ -58,8 +58,17 @@ export class KdsService {
       updateData.cookingAt = now;
     } else if (nextStatus === 'ready') {
       updateData.readyAt = now;
+      if (!item.cookingAt) {
+        updateData.cookingAt = item.createdAt;
+      }
     } else if (nextStatus === 'served') {
       updateData.servedAt = now;
+      if (!item.cookingAt) {
+        updateData.cookingAt = item.createdAt;
+      }
+      if (!item.readyAt) {
+        updateData.readyAt = now;
+      }
     } else if (nextStatus === 'cancelled') {
       updateData.cancelledAt = now;
       updateData.cancelledReason = cancelledReason || 'Bếp báo hủy';
