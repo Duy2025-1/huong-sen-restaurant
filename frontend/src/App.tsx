@@ -5,6 +5,7 @@ import { CartProvider } from './contexts/CartContext';
 import { Navbar } from './components/Navbar';
 import { CartDrawer } from './components/CartDrawer';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ChatWidget } from './components/chat/ChatWidget';
 
 // Pages
 import { HomePage } from './pages/customer/HomePage';
@@ -73,6 +74,7 @@ const AppContent: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      {!isAdminDashboard && !isOperational && <ChatWidget />}
     </div>
   );
 };

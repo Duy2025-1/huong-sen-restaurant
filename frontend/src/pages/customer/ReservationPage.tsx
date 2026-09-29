@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Users, Clock, Phone, User, CheckCircle2, FileText, Sparkles, MapPin } from 'lucide-react';
+import { Calendar, Users, Phone, User, CheckCircle2, FileText, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../../services/api';
 

@@ -14,6 +14,7 @@ import reportsRoutes from './modules/reports/reports.routes.js';
 
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import inventoryRoutes from './modules/inventory/inventory.routes.js';
+import chatRoutes from './modules/chat/chat.routes.js';
 
 export function createApp() {
   const app = express();
@@ -92,6 +93,7 @@ export function createApp() {
   app.use('/api/reports', reportsRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/inventory', inventoryRoutes);
+  app.use('/api/chat', chatRoutes);
 
   // 8. 404 Route Handler
   app.use((req, res) => {
