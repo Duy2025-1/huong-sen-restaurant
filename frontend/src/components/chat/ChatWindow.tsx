@@ -7,6 +7,7 @@ import {
   RotateCcw,
   UtensilsCrossed,
   CalendarDays,
+  ShoppingBag,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
@@ -17,16 +18,26 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ChatProductCard, type ChatProduct } from './ChatProductCard';
 import { ChatOrderCard, type ChatOrder } from './ChatOrderCard';
 
+export interface RecommendationPlan {
+  planId: string;
+  title: string;
+  description: string;
+  subtotal: number;
+  dishes: ChatProduct[];
+}
+
 export interface ChatMessage {
   id: string;
   role: 'customer' | 'assistant';
   text: string;
   products?: ChatProduct[];
+  recommendations?: RecommendationPlan[];
   order?: ChatOrder;
   quickReplies?: string[];
   action?: {
     type: 'view_menu' | 'open_reserve' | 'view_order' | 'add_to_cart';
     payload?: any;
+    label?: string;
   };
   timestamp?: string;
   isError?: boolean;
@@ -56,6 +67,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const navigate = useNavigate();
   const { addToCart, setIsCartOpen } = useCart();
   const { user } = useAuth();
+
+  const [conversationId, setConversationId] = useState<string>(() => {
+    try {
+      const saved = sessionStorage.getItem('rms_chat_conversation_id');
+      if (saved) return saved;
+      const newId = `web-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      sessionStorage.setItem('rms_chat_conversation_id', newId);
+      return newId;
+    } catch {
+      return `web-${Date.now()}`;
+    }
+  });
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
@@ -191,6 +214,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     try {
       const res = await api.post('/chat/message', {
         message: text,
+        conversationId,
         context: {
           customerPhone: user?.phone,
           user: user ? { id: user.id, fullName: user.fullName, phone: user.phone } : undefined,
@@ -203,6 +227,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         role: 'assistant',
         text: data.text || 'Dạ, Hương Sen đã ghi nhận thông tin ạ.',
         products: data.products,
+        recommendations: data.recommendations,
         order: data.order,
         quickReplies: data.quickReplies,
         action: data.action,
@@ -228,7 +253,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
 
-  // Thêm món vào giỏ hàng từ chat
+  // Thêm 1 món vào giỏ hàng từ chat
   const handleAddToCart = (product: ChatProduct, quantity: number) => {
     addToCart(product, quantity, [], '');
 
@@ -242,6 +267,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  // Thêm nhiều món vào giỏ hàng (áp dụng cho toàn bộ Phương án / Combo tư vấn)
+  const handleAddMultipleToCart = (dishes: ChatProduct[], planTitle?: string) => {
+    if (!dishes || dishes.length === 0) return;
+    let count = 0;
+    for (const dish of dishes) {
+      if (dish.isAvailable) {
+        addToCart(dish, 1, [], '');
+        count++;
+      }
+    }
+    if (count > 0) {
+      confetti({
+        particleCount: 75,
+        spread: 70,
+        origin: { y: 0.8 },
+      });
+      setToastMessage(`Đã thêm ${count} món${planTitle ? ` (${planTitle})` : ''} vào giỏ hàng!`);
+      setTimeout(() => setToastMessage(null), 3500);
+    }
+  };
+
   // Xem chi tiết món / điều hướng
   const handleViewDish = (product: ChatProduct) => {
     navigate(`/menu?search=${encodeURIComponent(product.name)}`);
@@ -252,6 +298,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     if (window.confirm('Bạn muốn bắt đầu lại cuộc trò chuyện mới?')) {
       setMessages([]);
       sessionStorage.removeItem('rms_chat_messages');
+      const newId = `web-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      sessionStorage.setItem('rms_chat_conversation_id', newId);
+      setConversationId(newId);
     }
   };
 
@@ -426,6 +475,64 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     })}
                   </div>
 
+                  {/* Render Recommendation Plans (Phương án 1, 2, 3) */}
+                  {msg.recommendations && msg.recommendations.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      {msg.recommendations.map((plan) => (
+                        <div
+                          key={plan.planId}
+                          className="bg-white rounded-2xl border border-wood-200 shadow-xs p-3 space-y-2.5 transition hover:border-lotus-300"
+                        >
+                          <div className="flex items-start justify-between gap-2 border-b border-wood-100 pb-2">
+                            <div>
+                              <h4 className="font-serif font-bold text-xs text-lotus-900 leading-snug">
+                                {plan.title}
+                              </h4>
+                              <p className="text-[10px] text-wood-500 font-light mt-0.5">
+                                {plan.description}
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-bold text-terracotta whitespace-nowrap bg-cream-100 px-2 py-0.5 rounded-lg shrink-0">
+                              {plan.subtotal.toLocaleString('vi-VN')}đ
+                            </span>
+                          </div>
+
+                          {/* Danh sách món trong phương án */}
+                          <div className="space-y-1">
+                            {plan.dishes.map((dish) => (
+                              <div
+                                key={dish.id}
+                                className="flex items-center justify-between text-[11px] text-wood-800 bg-cream-50/70 px-2 py-1 rounded-lg"
+                              >
+                                <span className="truncate max-w-[190px] font-medium">• {dish.name}</span>
+                                <span className="text-wood-600 font-serif">
+                                  {(dish.discountedPrice || dish.price).toLocaleString('vi-VN')}đ
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Nút thao tác nhanh */}
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              onClick={() => handleAddMultipleToCart(plan.dishes, plan.title)}
+                              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-lotus-800 hover:bg-lotus-900 text-cream-50 text-xs font-semibold shadow-xs transition active:scale-98"
+                            >
+                              <ShoppingBag className="w-3.5 h-3.5" />
+                              <span>Thêm tất cả vào giỏ</span>
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage(`Tôi chọn ${plan.title.split(':')[0] || 'phương án này'}`)}
+                              className="px-2.5 py-1.5 rounded-xl bg-cream-100 hover:bg-cream-200 text-lotus-900 border border-wood-200 text-[11px] font-medium transition"
+                            >
+                              Chọn
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Render Product Cards inside chat */}
                   {msg.products && msg.products.length > 0 && (
                     <div className="grid grid-cols-1 gap-2 pt-1">
@@ -466,6 +573,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                         >
                           <CalendarDays className="w-3.5 h-3.5" />
                           <span>Mở trang Đặt Bàn Ngay</span>
+                        </button>
+                      )}
+                      {msg.action.type === 'add_to_cart' && (
+                        <button
+                          onClick={() => handleAddMultipleToCart(msg.action?.payload?.dishes || [], msg.action?.label)}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-lotus-800 text-cream-50 text-xs font-bold hover:bg-lotus-900 transition shadow-xs active:scale-95"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                          <span>{msg.action.label || 'Thêm tất cả vào giỏ'}</span>
                         </button>
                       )}
                     </div>

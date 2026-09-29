@@ -22,7 +22,7 @@ const chatLimiter = rateLimit({
  */
 router.post('/message', chatLimiter, async (req: Request, res: Response) => {
   try {
-    const { message, context } = req.body;
+    const { message, context, conversationId } = req.body;
 
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ message: 'Tin nhắn không hợp lệ.' });
@@ -31,7 +31,12 @@ router.post('/message', chatLimiter, async (req: Request, res: Response) => {
     // Sanitize input length
     const cleanMessage = message.trim().slice(0, 500);
 
-    const response = await ChatService.processMessage(cleanMessage, context || {});
+    const mergedContext = {
+      ...(context || {}),
+      conversationId: conversationId || context?.conversationId,
+    };
+
+    const response = await ChatService.processMessage(cleanMessage, mergedContext);
     return res.json(response);
   } catch (error) {
     console.error('Chat processing error:', error);
