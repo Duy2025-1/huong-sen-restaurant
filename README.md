@@ -29,6 +29,7 @@ Các chức năng trong hệ thống được phân chia theo từng vai trò ng
 * Đặt bàn trước (`/reserve`): Điền ngày giờ, số lượng khách, chọn khu vực bàn mong muốn và ghi chú yêu cầu tiệc.
 * Tra cứu thông tin đơn hàng (`/order-lookup`) bằng mã đơn hoặc số điện thoại người đặt.
 * Xem các đánh giá nhận xét từ thực khách đã dùng bữa (chỉ hiển thị nhãn đã xác thực cho đơn hàng hoàn tất).
+* Trợ lý ảo tư vấn ẩm thực (Chatbot thông minh): Trò chuyện tự nhiên bằng tiếng Việt (hỗ trợ teencode, viết tắt, không dấu, song ngữ), gợi ý mâm cơm theo số người và ngân sách thực tế, giải đáp chi tiết độ cay, thành phần, kiểm tra tình trạng còn món, tra cứu số bàn trống và hỗ trợ thêm món trực tiếp vào giỏ hàng từ cửa sổ chat.
 
 ### Nhân viên thu ngân & phục vụ (POS)
 * Sơ đồ bàn trực quan theo 3 khu vực không gian: Sảnh Mộc (Tầng Trệt), Hiên Sen và Phòng VIP.
@@ -99,6 +100,7 @@ LTW/
 │   │   ├── modules/
 │   │   │   ├── audit/            # Module ghi nhật ký kiểm toán thao tác hệ thống
 │   │   │   ├── auth/             # Module đăng ký, đăng nhập nhân viên và khách hàng
+│   │   │   ├── chat/             # Module Chatbot & NLU (xử lý ngôn ngữ, quản lý hội thoại, bóc tách thực thể)
 │   │   │   ├── dashboard/        # Module tổng hợp báo cáo kinh doanh từ CSDL
 │   │   │   ├── inventory/        # Module quản lý nguyên vật liệu và biến động kho
 │   │   │   ├── kds/              # Module điều phối và theo dõi trạng thái bếp
@@ -118,7 +120,7 @@ LTW/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/           # Navbar, CartDrawer, ProtectedRoute, Charts
+│   │   ├── components/           # Navbar, CartDrawer, ProtectedRoute, Charts, Chat (Widget/Window/Cards)
 │   │   ├── contexts/             # AuthContext (quản lý đăng nhập), CartContext (giỏ hàng)
 │   │   ├── pages/
 │   │   │   ├── admin/            # AdminPage (Dashboard báo cáo, quản lý món, đơn hàng, đặt bàn)
@@ -236,6 +238,21 @@ Socket.io được sử dụng để đồng bộ trạng thái giữa các màn
 * `payment_completed`: Báo hoàn tất thanh toán hóa đơn để giải phóng bàn.
 * `dish_availability_changed`: Thông báo khi quản trị viên khóa món hoặc mở bán lại món ăn.
 
+### 6.4. Trợ lý ẩm thực Chatbot & Bộ máy Natural Language Understanding (NLU)
+
+Phân hệ Chatbot được xây dựng như một trợ lý ẩm thực trực tuyến dành cho khách hàng, hỗ trợ giải đáp thắc mắc, tư vấn món ăn và thực hiện các thao tác đặt bàn / thêm món mà không bị gò bó vào các câu lệnh cứng nhắc.
+
+#### Kiến trúc module NLU (`backend/src/modules/chat/`):
+* `ChatNLU` (`chat.nlu.ts`): Pipeline xử lý văn bản chuyên sâu gồm 5 công đoạn:
+  1. **TextNormalizer & EmojiExtractor**: Bóc tách biểu cảm Emoji, rút gọn các ký tự bị kéo dài quá mức (`heloooo` $\rightarrow$ `hello`, `ngonnn` $\rightarrow$ `ngon`, `quáaaa` $\rightarrow$ `quá`).
+  2. **SlangNormalizer**: Chuẩn hóa tiếng lóng, viết tắt và teencode phổ biến (`k`, `ko`, `hok` $\rightarrow$ `không`; `dc`, `đc` $\rightarrow$ `được`; `bn` $\rightarrow$ `bao nhiêu` / `bạn`; `j` $\rightarrow$ `gì`; `z` $\rightarrow$ `vậy`; `thui` $\rightarrow$ `thôi`; `vô` $\rightarrow$ `vào`). Bộ lọc sử dụng biểu thức chính quy Unicode tùy biến `(^|[\s,?!.;:()/"'“”])word(?=$|[\s,?!.;:()/"'“”])` thay cho `\b` chuẩn ASCII, ngăn chặn hiện tượng làm biến dạng các nguyên âm có dấu tiếng Việt (ví dụ: không bị thay thế nhầm chữ `kh` bên trong từ `không`).
+  3. **LanguageDetector**: Nhận diện ngôn ngữ hội thoại (Tiếng Việt `vi`, Tiếng Anh `en` hoặc pha trộn song ngữ `mixed`). Hỗ trợ các câu hỏi tiếng Anh phổ biến (`menu please`, `what do you recommend`, `book a table`, `opening hours`, `where are you`).
+  4. **EntityExtractor**: Trích xuất các thực thể nghiệp vụ: số lượng người (`people`: "2 người", "nhóm 4"), ngân sách (`budget`: "500k", "nửa triệu", "1tr2"), mốc thời gian & ngày (`time`, `date`: "19h", "7h30", "tối nay", "mai"), cấp độ cay (`spicyLevel`), dị ứng (`allergies`), mã đơn hàng, số điện thoại và số thứ tự món tham chiếu.
+  5. **IntentClassifier**: Phân loại ngữ nghĩa dựa trên 40 ý định chuẩn (Standard Intents) với cơ chế tính điểm trọng số và ngưỡng độ tự tin (Confidence Thresholds). Hỗ trợ phân rã câu đa ý định (Multi-intent: chào hỏi kết hợp yêu cầu tư vấn món và cung cấp số người / ngân sách).
+* `ChatMemory` (`chat.memory.ts`): Quản lý ngữ cảnh phiên hội thoại ngắn hạn (Context Window 10 lượt giao tiếp gần nhất). Lưu trữ danh sách món vừa được nhắc đến để giải quyết chính xác các câu hỏi nối tiếp có chứa đại từ chỉ định (*"món này"*, *"món đó"*) hoặc số thứ tự (*"món đầu tiên"*, *"món thứ 2"*), câu hỏi rút gọn không chủ ngữ (*"Còn không?"*, *"Có cay không?"*, *"7h"*), và duy trì ngữ cảnh khi khách hàng chuyển chủ đề rồi quay lại.
+* `ChatService` (`chat.service.ts`): Điều phối phản hồi và ánh xạ ý định người dùng với các dịch vụ nghiệp vụ của nhà hàng.
+* `ChatTools` (`chat.tools.ts`): Giao tiếp trực tiếp với cơ sở dữ liệu Prisma SQLite để truy vấn 118 món ăn, lọc khẩu vị, tính giá thực tế, kiểm tra số bàn trống và chuẩn bị payload cho giỏ hàng. Đảm bảo dữ liệu phản hồi trung thực 100%, không bịa đặt giá cả hoặc tình trạng phục vụ.
+
 ---
 
 ## 7. Hướng dẫn cài đặt và khởi chạy
@@ -345,6 +362,7 @@ Hệ thống backend cung cấp RESTful API với các tiền tố chính:
 * `/api/reservations`: Tiếp nhận yêu cầu đặt bàn, kiểm tra xung đột trùng bàn trong khung giờ $\pm 2$ tiếng, duyệt trạng thái đặt bàn.
 * `/api/dashboard`: Tổng hợp số liệu kinh doanh hôm nay từ CSDL (doanh thu, lượt đơn, tỷ lệ bàn, tốc độ KDS, phân bổ doanh thu theo giờ, top món bán chạy).
 * `/api/inventory`: Lấy danh sách 24 nguyên vật liệu kho, cảnh báo các mặt hàng sắp hết, ghi nhận giao dịch nhập/xuất kho.
+* `/api/chat`: Tiếp nhận tin nhắn người dùng (`POST /api/chat/message`), đồng bộ ngữ cảnh (món đang xem, mã bàn, mã đơn), thực thi pipeline NLU và trả về phản hồi kèm danh sách món ăn, giỏ hàng hoặc thao tác đặt bàn.
 
 ---
 
@@ -369,6 +387,12 @@ Hệ thống backend cung cấp RESTful API với các tiền tố chính:
 5. **Kiểm tra số liệu Dashboard**:
    * Truy cập `http://localhost:5173/admin` bằng tài khoản Admin (`admin@rms.com` / `123456`).
    * Xem doanh thu hôm nay và danh sách đơn hàng vừa hoàn tất được tính toán trực tiếp từ cơ sở dữ liệu.
+6. **Thử nghiệm Trợ lý Chatbot NLU**:
+   * Truy cập trang chủ `http://localhost:5173`, nhấn vào biểu tượng Trợ lý Hương Sen ở góc phải dưới màn hình.
+   * Thử nhắn câu tự nhiên: `"helo shoppp, nay ăn gì z, tui đi 4 ng tầm 500k thôi nha"`. Trợ lý sẽ chào và gợi ý ngay 2 phương án mâm cơm gia đình với giá tính toán chính xác từ thực đơn.
+   * Thử hỏi câu nối tiếp: `"món đầu tiên giá nhiêu?"` $\rightarrow$ Trợ lý nhớ đúng món đầu tiên để báo giá.
+   * Thử hỏi câu cụt: `"còn không?"` hoặc `"có cay không?"` $\rightarrow$ Trợ lý giải đáp trạng thái của món đó.
+   * Thử hỏi đặt bàn: `"à mà tối nay còn bàn không?"` $\rightarrow$ Trợ lý tra cứu số bàn trống thời gian thực trong CSDL.
 
 ---
 
