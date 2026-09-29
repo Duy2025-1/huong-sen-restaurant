@@ -51,18 +51,8 @@ export class ChatTools {
       where.category = { name: { contains: options.categoryName } };
     }
 
-    // Lọc theo từ khóa tìm kiếm
-    if (options.query && options.query.trim()) {
-      const q = options.query.trim();
-      const existingOr = where.OR || [];
-      where.OR = [
-        ...existingOr,
-        { name: { contains: q } },
-        { shortDescription: { contains: q } },
-        { description: { contains: q } },
-        { category: { name: { contains: q } } },
-      ];
-    }
+    // Note: Do not apply raw substring filter in SQLite where clause because SQLite lacks accent-insensitive collation.
+    // Full Vietnamese diacritic & fuzzy token matching is performed accurately in-memory below.
 
     let dishes = await prisma.dish.findMany({
       where,
@@ -78,6 +68,15 @@ export class ChatTools {
 
       // Ưu tiên 1: Tên món ăn có chứa từ khóa
       const nameMatched = dishes.filter((dish) => {
+        // Phân biệt "cá" (thủy hải sản) với "cà" trong đồ uống / tráng miệng (cà phê) hoặc rau củ (cà chua, cà tím, cà pháo)
+        if (normQ === 'ca') {
+          if (dish.category?.slug === 'do-uong' || dish.category?.slug === 'trang-mieng') return false;
+          const lower = dish.name.toLowerCase();
+          const hasCaFish = /(?:^|[\s,.-])cá(?:$|[\s,.-])/i.test(dish.name) || lower.includes('chả cá') || lower.includes('bún cá') || lower.includes('cá ');
+          if (!hasCaFish && (lower.includes('cà chua') || lower.includes('cà phê') || lower.includes('cà tím') || lower.includes('cà pháo'))) {
+            return false;
+          }
+        }
         const nameNorm = normalizeVietnamese(dish.name);
         return normQ.length <= 3 ? wordRegex.test(nameNorm) : nameNorm.includes(normQ);
       });

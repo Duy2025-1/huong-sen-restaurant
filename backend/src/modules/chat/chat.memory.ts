@@ -1,19 +1,14 @@
 import { ConversationMemory } from './chat.types.js';
+import { ChatNLU } from './chat.nlu.js';
 
 export function normalizeVietnamese(str: string): string {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'd')
-    .trim();
+  return ChatNLU.normalizeVietnamese(str);
 }
 
 export class ChatMemoryManager {
   private static store = new Map<string, { memory: ConversationMemory; updatedAt: number }>();
   private static readonly TTL_MS = 2 * 60 * 60 * 1000; // 2 giờ
+  private static readonly MAX_HISTORY_TURNS = 10; // Giới hạn context window (10 lượt gần nhất)
 
   /**
    * Lấy hoặc khởi tạo memory cho conversation
@@ -29,6 +24,7 @@ export class ChatMemoryManager {
       favoriteCategories: [],
       lastMentionedProducts: [],
       stage: 'IDLE',
+      history: [],
     };
 
     // Hợp nhất với client memory nếu có (giúp bảo toàn khi F5 hoặc multi-tab)
@@ -40,6 +36,7 @@ export class ChatMemoryManager {
         dislikes: Array.from(new Set([...memory.dislikes, ...(clientMemory.dislikes || [])])),
         allergies: Array.from(new Set([...memory.allergies, ...(clientMemory.allergies || [])])),
         favoriteCategories: Array.from(new Set([...memory.favoriteCategories, ...(clientMemory.favoriteCategories || [])])),
+        history: memory.history || [],
       };
     }
 
@@ -48,195 +45,69 @@ export class ChatMemoryManager {
   }
 
   /**
-   * Lưu memory cập nhật
+   * Lưu memory cập nhật và kiểm soát kích thước context window
    */
   static saveMemory(conversationId: string = 'default', memory: ConversationMemory): void {
+    if (memory.history && memory.history.length > this.MAX_HISTORY_TURNS * 2) {
+      memory.history = memory.history.slice(-this.MAX_HISTORY_TURNS * 2);
+    }
     this.store.set(conversationId, { memory, updatedAt: Date.now() });
   }
 
   /**
-   * Trích xuất các thực thể tự nhiên (Số người, Ngân sách, Khẩu vị, Dị ứng...) từ tin nhắn
+   * Ghi lại lượt hội thoại (Customer & Assistant) vào lịch sử ngữ cảnh
+   */
+  static recordTurn(
+    conversationId: string,
+    customerText: string,
+    assistantText: string,
+    intent?: any
+  ): void {
+    const memory = this.getOrCreateMemory(conversationId);
+    if (!memory.history) memory.history = [];
+
+    memory.history.push({ role: 'customer', text: customerText, intent, timestamp: Date.now() });
+    memory.history.push({ role: 'assistant', text: assistantText, intent, timestamp: Date.now() });
+
+    if (memory.history.length > this.MAX_HISTORY_TURNS * 2) {
+      memory.history = memory.history.slice(-this.MAX_HISTORY_TURNS * 2);
+    }
+
+    this.saveMemory(conversationId, memory);
+  }
+
+  /**
+   * Trích xuất các thực thể tự nhiên (Số người, Ngân sách, Khẩu vị, Dị ứng...) sử dụng ChatNLU
    */
   static extractEntities(rawMsg: string, currentMemory: ConversationMemory): ConversationMemory {
+    const nlu = ChatNLU.process(rawMsg, currentMemory);
     const updated = { ...currentMemory };
-    const norm = normalizeVietnamese(rawMsg);
-    // Chuỗi làm sạch dấu câu để so khớp từ khóa chính xác
-    const cleanNorm = norm.replace(/[?!.,;:()]/g, ' ').replace(/\s+/g, ' ').trim();
 
-    // 1. Trích xuất số người
-    const people = this.extractPeopleCount(rawMsg, cleanNorm);
-    if (people !== undefined) {
-      updated.numberOfPeople = people;
+    if (nlu.entities.people !== undefined) {
+      updated.numberOfPeople = nlu.entities.people;
     }
 
-    // 2. Trích xuất ngân sách
-    const budget = this.extractBudget(rawMsg, cleanNorm);
-    if (budget !== undefined) {
-      // Nếu khách bảo "mỗi người 200k" và đã có số người
-      if (cleanNorm.includes('moi nguoi') || cleanNorm.includes('moi khach') || cleanNorm.includes('dau nguoi')) {
-        if (updated.numberOfPeople) {
-          updated.budget = budget * updated.numberOfPeople;
-        } else {
-          updated.budget = budget;
-        }
-      } else {
-        updated.budget = budget;
-      }
+    if (nlu.entities.budget !== undefined) {
+      updated.budget = nlu.entities.budget;
     }
 
-    // 3. Trích xuất độ cay (SPICY LEVEL) - BẢO TOÀN TRONG SUỐT PHIÊN
-    if (
-      cleanNorm.includes('khong an cay') ||
-      cleanNorm.includes('khong cay') ||
-      cleanNorm.includes('an nhat') ||
-      cleanNorm.includes('chiu cay kem') ||
-      cleanNorm.includes('dung bo ot') ||
-      cleanNorm.includes('khong ot')
-    ) {
-      updated.spicyPreference = 'NONE';
-    } else if (cleanNorm.includes('it cay') || cleanNorm.includes('cay nhe') || cleanNorm.includes('cay vua')) {
-      updated.spicyPreference = 'MILD';
-    } else if (cleanNorm.includes('an cay duoc') || cleanNorm.includes('thich an cay') || cleanNorm.includes('cay nhieu')) {
-      updated.spicyPreference = 'HOT';
+    if (nlu.entities.spicyLevel !== undefined) {
+      updated.spicyPreference = nlu.entities.spicyLevel;
     }
 
-    // 4. Trích xuất dị ứng (ALLERGIES)
-    const allergyKeywords: Record<string, string> = {
-      'dau phong': 'đậu phộng',
-      'lac': 'đậu phộng',
-      'hai san': 'hải sản',
-      'tom': 'tôm',
-      'cua': 'cua',
-      'muc': 'mực',
-      'sua': 'sữa',
-      'gluten': 'gluten',
-      'trung': 'trứng',
-      'bot ngot': 'bột ngọt',
-      'mi chinh': 'mì chính',
-    };
-
-    for (const [key, label] of Object.entries(allergyKeywords)) {
-      if (cleanNorm.includes(`di ung ${key}`) || cleanNorm.includes(`khong an duoc ${key}`)) {
-        if (!updated.allergies.includes(label)) {
-          updated.allergies.push(label);
+    if (nlu.entities.allergies && nlu.entities.allergies.length > 0) {
+      for (const alg of nlu.entities.allergies) {
+        if (!updated.allergies.includes(alg)) {
+          updated.allergies.push(alg);
         }
       }
     }
 
-    // 5. Trích xuất sở thích món (FOOD PREFERENCES)
-    const prefKeywords: Record<string, string> = {
-      'thich ca': 'món cá',
-      'me mon ca': 'món cá',
-      'muon an ca': 'món cá',
-      'mon ca': 'món cá',
-      'thich ga': 'món gà',
-      'me mon ga': 'món gà',
-      'thich bo': 'món bò',
-      'thich thit bo': 'món bò',
-      'thich heo': 'món heo',
-      'thich lau': 'lẩu',
-      'an lau': 'lẩu',
-      'thich mon nuoc': 'món nước',
-      'mon nuoc': 'món nước',
-      'thich mon nuong': 'món nướng',
-      'thich mon viet': 'món Việt truyền thống',
-      'mon viet truyen thong': 'món Việt truyền thống',
-      'mon viet': 'món Việt truyền thống',
-      'an com': 'cơm niêu',
-      'thich com': 'cơm niêu',
-      'thich chay': 'món chay',
-      'an chay': 'món chay',
-    };
-
-    for (const [key, label] of Object.entries(prefKeywords)) {
-      if (cleanNorm.includes(key)) {
-        if (!updated.foodPreferences.includes(label)) {
-          updated.foodPreferences.push(label);
-        }
-      }
-    }
-
-    // 6. Trích xuất món không thích (DISLIKES)
-    const dislikeKeywords: Record<string, string> = {
-      'khong thich hai san': 'hải sản',
-      'khong an hai san': 'hải sản',
-      'khong thich hanh': 'hành',
-      'khong an hanh': 'hành',
-      'khong thich do ngot': 'đồ ngọt',
-      'khong thich thit mo': 'thịt mỡ',
-    };
-
-    for (const [key, label] of Object.entries(dislikeKeywords)) {
-      if (cleanNorm.includes(key)) {
-        if (!updated.dislikes.includes(label)) {
-          updated.dislikes.push(label);
-        }
-      }
+    if (nlu.entities.orderCode) {
+      updated.activeOrderCode = nlu.entities.orderCode;
     }
 
     return updated;
-  }
-
-  /**
-   * Trích xuất số người từ tiếng Việt tự nhiên
-   */
-  private static extractPeopleCount(rawMsg: string, cleanNorm: string): number | undefined {
-    // 1. Dạng số: "4 người", "2 khách", "cho 5 người", "nhóm 6 người"
-    const matchNum = cleanNorm.match(/(\d+)\s*(nguoi|khach|cho|suat|phan|ban)/i);
-    if (matchNum) {
-      const n = parseInt(matchNum[1]);
-      if (n > 0 && n <= 100) return n;
-    }
-
-    // 2. Dạng chữ: "hai người", "bốn người", "đi đôi", "ba người"
-    const wordNumbers: Record<string, number> = {
-      'mot': 1,
-      'hai': 2,
-      'di doi': 2,
-      '2 vo chong': 2,
-      'ba': 3,
-      'bon': 4,
-      'nam': 5,
-      'sau': 6,
-      'bay': 7,
-      'tam': 8,
-      'chin': 9,
-      'muoi': 10,
-    };
-
-    for (const [word, num] of Object.entries(wordNumbers)) {
-      if (cleanNorm.includes(`${word} nguoi`) || cleanNorm.includes(`${word} khach`) || cleanNorm.includes(`${word} ban`) || (word === 'di doi' && cleanNorm.includes('di doi'))) {
-        return num;
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Trích xuất ngân sách từ tiếng Việt tự nhiên
-   */
-  private static extractBudget(rawMsg: string, cleanNorm: string): number | undefined {
-    // "nửa triệu" -> 500.000
-    if (cleanNorm.includes('nua trieu')) return 500000;
-    if (cleanNorm.includes('1 trieu') || cleanNorm.includes('mot trieu')) return 1000000;
-    if (cleanNorm.includes('2 trieu') || cleanNorm.includes('hai trieu')) return 2000000;
-
-    // "khoảng 500k", "tầm 600 nghìn", "dưới 700.000", "700k"
-    const kMatch = rawMsg.match(/(\d+)\s*(k|nghin|ngan)/i) || cleanNorm.match(/(\d+)\s*(k|nghin|ngan)/);
-    if (kMatch) {
-      const n = parseInt(kMatch[1]);
-      if (n > 0) return n * 1000;
-    }
-
-    // Dạng đầy đủ: "500000", "500.000"
-    const fullMatch = rawMsg.match(/(\d{2,4})[.,](\d{3})/);
-    if (fullMatch) {
-      const n = parseInt(fullMatch[1] + fullMatch[2]);
-      if (n >= 10000) return n;
-    }
-
-    return undefined;
   }
 
   private static cleanExpiredSessions(): void {
